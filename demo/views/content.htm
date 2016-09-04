@@ -6,16 +6,17 @@
     ${#This is a Comment!#}
     ${=html}
 
-    <p>${test('My Guy')}</p>
+    <p>${test(["Argument 1", "Argument 2"])}</p>
 
     <ul>
     @foreach(item in items)
 
         <li>
+            {{ angular }}
             ${item.name}
 
             @foreach((i,person) in item.people)
-                <div>${i} : ${person}</div>
+                <div>#${i}: ${item.name} ${person}</div>
             @endforeach
         </li>
 

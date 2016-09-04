@@ -4,9 +4,9 @@ var factory = require('../index');
 
 var data = {
     title: "Mike",
-    test: function(string)
+    test: function(args)
     {
-        return "function called: "+string;
+        return "function called: "+args.join(" - ");
     },
     html: "<h1>My Html</h1>",
     footer: {
