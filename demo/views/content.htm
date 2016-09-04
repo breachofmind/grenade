@@ -1,0 +1,36 @@
+@extends("layouts/layout")
+
+@section("content")
+    <h1>Content</h1>
+
+    ${#This is a Comment!#}
+    ${=html}
+
+    <p>${test('My Guy')}</p>
+
+    <ul>
+    @foreach(item in items)
+
+        <li>
+            ${item.name}
+
+            @foreach((i,person) in item.people)
+                <div>${i} : ${person}</div>
+            @endforeach
+        </li>
+
+    @endforeach
+    </ul>
+
+    @include("partials/partial")
+
+@endsection
+
+@section("footer")
+
+<footer>
+    <p>Copyright!</p>
+    <h1>${footer.title}</h1>
+</footer>
+
+@endsection

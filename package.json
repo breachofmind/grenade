@@ -1,0 +1,27 @@
+{
+  "name": "nade",
+  "version": "0.0.1",
+  "description": "Node-blade (nade) javascript templater",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/breachofmind/nade.git"
+  },
+  "author": "Mike Adamczyk <mike@bom.us>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/breachofmind/nade/issues"
+  },
+  "homepage": "https://github.com/breachofmind/nade#readme",
+  "dependencies": {
+    "bluebird": "^3.4.6",
+    "js-beautify": "^1.6.4",
+    "lodash": "^4.15.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0"
+  }
+}
