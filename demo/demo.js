@@ -12,6 +12,11 @@ var data = {
     footer: {
         title: "Footer Title!"
     },
+    hash: {
+        item1: "Hash 1",
+        item2: "Hash 2",
+        item3: "Hash 3",
+    },
     items: [
         {name:"Item 1", id:1, people: [1,5,3]},
         {name:"Item 2", id:2, people: [1,9,3]},

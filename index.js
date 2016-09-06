@@ -94,7 +94,7 @@ function Factory()
         {
             fs.readFile(filePath,function(err,contents) {
                 if (err) return callback(new Error(err),null);
-                var template = factory.compile(contents);
+                var template = factory.compile(contents.toString());
 
                 return callback(null, template(options));
             })

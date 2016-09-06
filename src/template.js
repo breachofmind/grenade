@@ -38,21 +38,11 @@ Template.prototype = {
      */
     root: function()
     {
-        var parent = this;
-        while (parent.parent) {parent = parent.parent;}
+        var parent = this.parent;
+        while (parent) {parent = parent.parent;}
         return parent;
     },
 
-    /**
-     * Return the depth.
-     * @returns {number}
-     */
-    level: function()
-    {
-        var parent = this, level=1;
-        while(parent.parent) {parent = parent.parent; level++;}
-        return level;
-    },
 
     /**
      * Return a list of all tag matches.

@@ -4,8 +4,7 @@ var utils = require('./utils');
 
 var objects = {};
 var constructors = [];
-
-
+var counter = 0;
 
 function noop(args) {
     return function() {
@@ -13,6 +12,12 @@ function noop(args) {
     }
 }
 
+/**
+ * The Tag class.
+ * @param name string
+ * @param opts options
+ * @constructor
+ */
 function Tag(name,opts)
 {
     if (!opts) opts = {};
@@ -60,22 +65,34 @@ Tag.prototype = {
         utils.eachMatch(this.rx, template, function(match) {
             return new TagMatch(match, template);
         });
-        //return utils.matches(this.rx, template.input).map(function(match){
-        //    return new TagMatch(match, template);
-        //});
     }
 };
 
+/**
+ * Get a tag object.
+ * @param name string
+ * @returns {*}
+ */
 Tag.getObject = function(name)
 {
     return objects[name];
 };
 
+/**
+ * Add a tag to the constructor.
+ * Whenever a new template is created, a tag is searched for in the queue.
+ * @param tag string
+ * @returns {*}
+ */
 Tag.addConstructor = function(tag)
 {
     return constructors.indexOf(tag.name) == -1 ? constructors.push(tag.name) : null;
 };
 
+/**
+ * Get the tag constructors.
+ * @returns {Array}
+ */
 Tag.getConstructors = function()
 {
     return constructors;
@@ -113,11 +130,13 @@ Tag.renderer = function(match)
  */
 function TagMatch(match, template)
 {
+    counter++;
+
     this.indexes    = [match.index,match.lastIndex];
     this.template   = template;
     this.input      = match[0];
     this.tag        = Tag.getObject(match[1]);
-    this.key        = this.tag.name+template.level()+Object.keys(template.matches).length;
+    this.key        = this.tag.name+counter;
     this.args       = this.tag.parse ? this.tag.parse(match[2]) : match[2];
     this.scope      = match[3] || null;
 
@@ -129,8 +148,16 @@ function TagMatch(match, template)
 
     // Evaluating the tag can effect the template input string.
     this.tag.evaluate(template,this);
+
+
 }
 
+/**
+ * Replace the matched input with the given string.
+ * @example @section("content") ... @endsection -> ""
+ * @param withWhat string
+ * @returns {*}
+ */
 TagMatch.prototype.replace = function(withWhat)
 {
     return this.template.input = utils.replaceAt(this.template.input, this.indexes[0], this.indexes[0]+this.input.length, withWhat);

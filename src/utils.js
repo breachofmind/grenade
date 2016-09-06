@@ -19,6 +19,13 @@ module.exports = {
         return out;
     },
 
+    /**
+     * Calls a function against each match.
+     * @param rx RegEx
+     * @param template Template
+     * @param handler function
+     * @returns void
+     */
     eachMatch: function(rx,template,handler)
     {
         rx.lastIndex = 0;
@@ -35,6 +42,14 @@ module.exports = {
         } while(m);
     },
 
+    /**
+     * Replaces a part of a string, which should be faster than string.replace().
+     * @param string string
+     * @param start number
+     * @param end number
+     * @param what string
+     * @returns {*}
+     */
     replaceAt: function(string,start,end,what)
     {
         return string.substring(0, start) + what + string.substring(end);
