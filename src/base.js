@@ -21,7 +21,7 @@ module.exports = function(factory)
         {
             // Replace the tag with the layout once it is loaded.
             var str = factory.fileGetContents(match.args);
-            template.replace(match.input,str);
+            match.replace(str);
             template.getTagMatches(['section','yield']);
         }
     });
@@ -41,7 +41,7 @@ module.exports = function(factory)
         {
             var str = factory.fileGetContents(match.args);
             match.scope = new Template(str,match);
-            template.replace(match.input,Tag.renderer(match));
+            match.replace(Tag.renderer(match));
         },
 
         render: function(data,match)
@@ -77,7 +77,7 @@ module.exports = function(factory)
             template.sections[name] = match;
 
             // Erase from the template.
-            template.erase(match.input);
+            match.replace("");
         }
     });
 
@@ -97,7 +97,7 @@ module.exports = function(factory)
         {
             var name = match.args;
             if (template.sections[name]) {
-                template.replace(match.input, template.sections[name].scope);
+                match.replace(template.sections[name].scope);
             }
         }
     });
@@ -118,37 +118,38 @@ module.exports = function(factory)
         parse: function(args)
         {
             var index,key,array;
-            var parts = args.trim().split(" in ");
+            var parts = args.trim().split(" in ",2);
             array = parts[1];
-            if (_.startsWith(parts[0],"(")) {
+            key = parts[0];
+
+            // If the first character is parenthesis...
+            if (parts[0][0] == "(") {
                 var tracking = parts[0].replace(/[\(|\)]/g,"").split(",",2);
                 index = tracking[0];
                 key = tracking[1];
-            } else {
-                key = parts[0];
             }
-            return {key: key, array: array, idx:index}
+            return {key: key, array: array, index:index}
         },
 
         evaluate: function(template,match)
         {
             match.scope = new Template(match.scope, match);
-            template.replace(match.input, Tag.renderer(match));
+            match.replace(Tag.renderer(match));
         },
 
         render: function(data,match)
         {
-            var out = [];
+            var out = "";
             var array = data.value(match.args.array);
 
             _.each(array, function(object,i) {
-                var scopeObject = {};
-                scopeObject[match.args.key] = object;
-                if (match.args.idx) scopeObject[match.args.idx] = i.toString();
-                out.push(match.scope.render( new Data(scopeObject,data)) );
+                var scopeData = {};
+                scopeData[match.args.key] = object;
+                if (match.args.index) scopeData[match.args.index] = i.toString();
+                out += match.scope.render( new Data(scopeData,data));
             });
 
-            return out.join("");
+            return out;
         }
     });
 
@@ -176,13 +177,22 @@ module.exports = function(factory)
 
         evaluate: function(template,match)
         {
-            match.scope = new Template(match.scope, match);
-            template.replace(match.input, Tag.renderer(match));
+            // Split the input into separate templates for if/else.
+            var statements = match.scope.split("@else");
+            match.scope = [new Template(statements[0],match)];
+            if (statements.length > 1) {
+                match.scope.push(new Template(statements[1],match));
+            }
+            match.replace(Tag.renderer(match));
+
         },
 
         render: conditional(false)
     });
 
+    /**
+     * Conditional, which is the inverse of @if
+     */
     Tag.extend('unless', {
         block:true,
         parse: function(args)
@@ -191,36 +201,46 @@ module.exports = function(factory)
         },
         evaluate: function(template,match)
         {
-            match.scope = new Template(match.scope, match);
-            template.replace(match.input, Tag.renderer(match));
+            // Split the input into separate templates for if/else.
+            var statements = match.scope.split("@else");
+            match.scope = [new Template(statements[0],match)];
+            if (statements.length > 1) {
+                match.scope.push(new Template(statements[1],match));
+            }
+            match.replace(Tag.renderer(match));
         },
+
         render: conditional(true)
     })
 };
 
-function conditional(reverse)
+/**
+ * A function for checking if/else/unless during rendering.
+ * @param inverse
+ * @returns {Function}
+ */
+function conditional(inverse)
 {
     return function(data,match)
     {
-        var hasElse = match.scope.input.indexOf('@else') > -1;
+        var hasElse = match.scope.length > 1;
         var expression = match.args;
-        var truthy = (function(__data){
-            var __keys = Object.keys(__data);
-            for(var i=0; i<__keys.length; i++) {
-                eval("var "+__keys[i]+" = __data[__keys[i]];");
-            }
-            return eval(expression);
-        })(data);
+        var keys = Object.keys(data.scope).map(function(key) {
+            return "var "+key+"="+JSON.stringify(data.scope[key])+";";
+        });
+        var fn = new Function('data', keys.join("")+" return "+expression+";");
+        var truthy = fn(data);
 
         if (! truthy) {
-            if (reverse) {
-                return hasElse ? match.scope.render(data).split("@else",2)[0] : match.scope.render(data);
+            if (inverse) {
+                return match.scope[0].render(data); // Unless
             }
-            return hasElse ? match.scope.render(data).split("@else",2)[1] : "";
+            return hasElse ? match.scope[1].render(data): ""; // If
         }
-        if (reverse) {
-            return hasElse ? match.scope.render(data).split("@else",2)[1] : "";
+
+        if (inverse) {
+            return hasElse ? match.scope[1].render(data) : ""; // Unless
         }
-        return hasElse ? match.scope.render(data).split("@else",2)[0] : match.scope.render(data);
+        return match.scope[0].render(data); // If
     }
 }

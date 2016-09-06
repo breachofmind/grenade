@@ -11,8 +11,11 @@ module.exports = {
         var out = [];
         do {
             var m = rx.exec(str);
-            if (m) out.push(m);
+            if (m) {
+                m.lastIndex = rx.lastIndex;
+                out.push(m);
+            }
         } while (m);
         return out;
-    }
+    },
 };

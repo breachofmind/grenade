@@ -2,7 +2,6 @@
 var _ = require('lodash');
 var utils = require('./utils');
 
-const MODE_ESCAPE   = "";
 const MODE_RAW      = "=";
 const MODE_COMMENT  = "#";
 const RX_ARG_SPLIT  = /\s*\,\s*(?![^,]+\])/;
@@ -37,21 +36,8 @@ DataObject.prototype = {
         // Defaults.
         var output = {
             property: _.unescape(string),
-            mode: MODE_ESCAPE,
             args: null,
         };
-
-        // The first character determines what to do.
-        switch(output.property[0]) {
-            case MODE_RAW:
-                output.mode = MODE_RAW;
-                output.property = output.property.replace(MODE_RAW,"");
-                break;
-            case MODE_COMMENT:
-                output.mode = MODE_COMMENT;
-                output.property = output.property.replace(MODE_COMMENT,"");
-                break;
-        }
 
         // Check if the property is a function call.
         if (output.property.indexOf("(") > -1 && output.property.indexOf(")") > -1) {
@@ -73,23 +59,25 @@ DataObject.prototype = {
     {
         if (! args) return null;
         return args.map(function(str) {
-            return eval(str);
-        })
+            // str could be "argument" , argument, or [argument];
+            var fn = new Function('data', "try { return "+str+" } catch (e) { return data.value('"+str+"'); }");
+            return fn.apply(this,[this]);
+        }.bind(this))
     },
 
     /**
      * Get the string value of a property.
      * The output value could be a comment, escaped HTML, or raw HTML.
      * @param property string
-     * @param template Template
+     * @param mode string
      * @returns {*}
      */
-    prop: function(property,template)
+    prop: function(property,mode)
     {
         var input = typeof property == 'string' ? this._parse(property) : property;
 
         // Don't write the value of a comment into the output.
-        if (input.mode === MODE_COMMENT) {
+        if (mode === MODE_COMMENT) {
             return "";
         }
         var value = this.value(input.property);
@@ -98,7 +86,7 @@ DataObject.prototype = {
         if (typeof value == 'function') {
             value = value.apply(this.scope, input.args);
         }
-        return input.mode === MODE_ESCAPE ? _.escape(value) : value;
+        return mode == MODE_RAW ? value : _.escape(value);
     },
 
     /**

@@ -8,6 +8,8 @@ var Promise = require('bluebird');
 var Tag   = require('./tag');
 var beautify = require('js-beautify').html;
 
+const VAR_RX = /\$\{(.*?)\}/gm;
+const DEBUG = false;
 
 /**
  * The Template class.
@@ -23,7 +25,7 @@ function Template(input,parent)
 
     this.getTagMatches(Tag.getConstructors());
 
-    this.createAccessors();
+    this.source = this.generateSource();
 }
 
 
@@ -68,18 +70,38 @@ Template.prototype = {
     /**
      * Creates accessor functions for ${variable} data.
      * This is evaluated when the template is rendered later.
-     * @returns number
+     * @returns object
      */
-    createAccessors: function()
+    generateSource: function()
     {
-        var matches = utils.matches(/\$\{(.*?)\}/gm, this.input);
-        for (let i=0; i<matches.length; i++) {
+        var source = this.input;
+
+        var matches = utils.matches(VAR_RX, source);
+
+        for (let i=0; i<matches.length; i++)
+        {
             var match = matches[i];
-            if (! _.startsWith(match[1],'data.tag')) {
-                this.replace(match[0], '${data.prop("' + _.escape(match[1])+'",this)}');
+            var string = match[1];
+            if (! _.startsWith(string,'data.tag')) {
+                var args = "";
+                if (string[0] == "=" || string[0] == "#") {
+                    args = '"'+ _.escape(string.replace(string[0],""))+'"';
+                    args += ',"'+string[0]+'"';
+                } else {
+                    args = '"'+ _.escape(string)+'"';
+                }
+
+                var func = 'data.prop('+args+')';
+                match[1] = '${'+func+'}';
+                source = source.replace(match[0], match[1]);
+            } else {
+                func = string;
+                match[1] = '${'+func+'}';
             }
+            match.fn = new Function("data", "var out = ''; try { out = "+func+"; } catch(e) { out = e; } return out;");
         }
-        return matches.length;
+
+        return {string: source, vars: matches };
     },
 
     /**
@@ -89,7 +111,7 @@ Template.prototype = {
      * @returns {Template}
      */
     replace: function(str, withWhat) {
-        this.input = _.replace(this.input, str, withWhat);
+        this.input = this.input.replace(str,withWhat);
         return this;
     },
 
@@ -109,18 +131,13 @@ Template.prototype = {
      */
     render: function(data)
     {
-        // Split into the strings and functions
-        var parts = this.input.split(/\$(\{.*?\})/gm);
-        var output = parts.map(function(part) {
-            if (_.startsWith(part,"{") && _.endsWith(part,"}")) {
-                var func = part.replace(/[\{}]/g,"");
-                return eval("try { "+func+" } catch (e) { e; }");
-            }
-            return part;
+        var output = this.source.string;
+
+        this.source.vars.forEach(function(match){
+            output = output.replace(match[1], match.fn.apply(this,[data]));
         }.bind(this));
 
-
-        return beautify(output.join(""), {indent_size:2}).trim();
+        return DEBUG ? beautify(output, {indent_size:2}) :  output;
     }
 };
 

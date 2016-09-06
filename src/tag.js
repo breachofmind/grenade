@@ -5,6 +5,10 @@ var utils = require('./utils');
 var objects = {};
 var constructors = [];
 
+String.prototype.replaceBetween = function(start, end, what) {
+    return this.substring(0, start) + what + this.substring(end);
+};
+
 function noop(args) {
     return function() {
         return args;
@@ -108,6 +112,7 @@ Tag.renderer = function(match)
  */
 function TagMatch(match, template)
 {
+    this.indexes    = [match.index,match.lastIndex];
     this.template   = template;
     this.input      = match[0];
     this.tag        = Tag.getObject(match[1]);
@@ -124,6 +129,11 @@ function TagMatch(match, template)
     // Evaluating the tag can effect the template input string.
     this.tag.evaluate(template,this);
 }
+
+TagMatch.prototype.replace = function(withWhat)
+{
+    return this.template.replace(this.input,withWhat);
+};
 
 
 module.exports = Tag;

@@ -3,10 +3,19 @@
 @section("content")
     <h1>Content</h1>
 
-    ${#This is a Comment!#}
-    ${=html}
+    @if(items[0].id == 1)
+    <h1>Is True</h1>
+    @endif
 
-    <p>${test(["Argument 1", "Argument 2"])}</p>
+    @unless(false)
+    <h1>Is False</h1>
+    @endunless
+
+    ${#This is a Comment!#}
+    ${=htmls}
+
+
+    <p>${test(title,"argument 1")}</p>
 
     <ul>
     @foreach(item in items)

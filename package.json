@@ -1,5 +1,5 @@
 {
-  "name": "nade",
+  "name": "grenade",
   "version": "0.0.1",
   "description": "Node-blade (nade) javascript templater",
   "main": "index.js",
