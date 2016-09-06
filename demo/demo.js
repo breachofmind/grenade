@@ -22,9 +22,8 @@ var data = {
 
 factory.setRootPath(__dirname+"/views/");
 factory.ext = "htm";
+factory.debug(true);
 var template = factory.load('content');
 //console.log(template);
 
-var output = template(data);
-
-console.log(output);
+console.log(template(data));

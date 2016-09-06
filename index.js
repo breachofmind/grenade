@@ -5,13 +5,25 @@ var Template    = require('./src/template');
 var Tag         = require('./src/tag');
 var Data        = require('./src/data');
 var base        = require('./src/base');
+var beautify    = require('js-beautify').html;
 
 function Factory()
 {
     var factory = this;
+    var debug = false;
     var rootPath = "./";
 
     this.ext = "nade";
+
+    /**
+     * Set debug boolean.
+     * @param boolean
+     * @returns {*}
+     */
+    this.debug = function(boolean)
+    {
+        return debug = boolean;
+    };
 
     /**
      * Set the root path.
@@ -42,7 +54,8 @@ function Factory()
         }
         var template = new Template(string);
         return function(object) {
-            return template.render( new Data(object,null) );
+            var output = template.render( new Data(object,null) );
+            return debug ? beautify(output, {indent_size:2, max_preserve_newlines:0}) : output;
         }
     };
 

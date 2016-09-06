@@ -5,9 +5,7 @@ var utils = require('./utils');
 var objects = {};
 var constructors = [];
 
-String.prototype.replaceBetween = function(start, end, what) {
-    return this.substring(0, start) + what + this.substring(end);
-};
+
 
 function noop(args) {
     return function() {
@@ -59,9 +57,12 @@ Tag.prototype = {
      */
     find: function(template)
     {
-        return utils.matches(this.rx, template.input).map(function(match){
+        utils.eachMatch(this.rx, template, function(match) {
             return new TagMatch(match, template);
         });
+        //return utils.matches(this.rx, template.input).map(function(match){
+        //    return new TagMatch(match, template);
+        //});
     }
 };
 
@@ -100,7 +101,7 @@ Tag.extend = function(name,opts)
  */
 Tag.renderer = function(match)
 {
-    return '${data.tag("'+match.key+'",this)}';
+    return '${__data.tag("'+match.key+'",this)}';
 };
 
 
@@ -132,7 +133,7 @@ function TagMatch(match, template)
 
 TagMatch.prototype.replace = function(withWhat)
 {
-    return this.template.replace(this.input,withWhat);
+    return this.template.input = utils.replaceAt(this.template.input, this.indexes[0], this.indexes[0]+this.input.length, withWhat);
 };
 
 

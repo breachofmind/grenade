@@ -26,29 +26,6 @@ module.exports = function(factory)
         }
     });
 
-    /**
-     * Includes a file at the tag position.
-     * @usage
-     * @include("dir/filename")
-     */
-    Tag.extend('include', {
-        parse: function(args)
-        {
-            return eval(args);
-        },
-
-        evaluate: function(template,match)
-        {
-            var str = factory.fileGetContents(match.args);
-            match.scope = new Template(str,match);
-            match.replace(Tag.renderer(match));
-        },
-
-        render: function(data,match)
-        {
-            return match.scope.render(data);
-        }
-    });
 
     /**
      * A section tag is used in conjunction with a @extends and @yield tag.
@@ -99,6 +76,31 @@ module.exports = function(factory)
             if (template.sections[name]) {
                 match.replace(template.sections[name].scope);
             }
+        }
+    });
+
+
+    /**
+     * Includes a file at the tag position.
+     * @usage
+     * @include("dir/filename")
+     */
+    Tag.extend('include', {
+        parse: function(args)
+        {
+            return eval(args);
+        },
+
+        evaluate: function(template,match)
+        {
+            var str = factory.fileGetContents(match.args);
+            match.scope = new Template(str,match);
+            match.replace(Tag.renderer(match));
+        },
+
+        render: function(data,match)
+        {
+            return match.scope.render(data);
         }
     });
 
