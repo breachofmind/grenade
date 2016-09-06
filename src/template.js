@@ -8,6 +8,7 @@ var Promise = require('bluebird');
 var Tag   = require('./tag');
 var beautify = require('js-beautify').html;
 
+
 /**
  * The Template class.
  * @param input string
@@ -20,7 +21,7 @@ function Template(input,parent)
     this.parent = parent || null;
     this.matches = {};
 
-    this.getTagMatches(['extends','include','foreach','if']);
+    this.getTagMatches(Tag.getConstructors());
 
     this.createAccessors();
 }
@@ -58,7 +59,7 @@ Template.prototype = {
     getTagMatches: function(tags)
     {
         for (let i=0; i<tags.length; i++) {
-            Tag.objects[tags[i]].find(this);
+            Tag.getObject(tags[i]).find(this);
         }
 
         return this.matches;

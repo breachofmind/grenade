@@ -2,6 +2,9 @@
 
 var utils = require('./utils');
 
+var objects = {};
+var constructors = [];
+
 function noop(args) {
     return function() {
         return args;
@@ -18,6 +21,10 @@ function Tag(name,opts)
     this.parse = opts.parse || null;
     this.evaluate = opts.evaluate || noop(null);
     this.render = opts.render || noop("");
+
+    if (! opts.hasOwnProperty('construct') || opts.construct == true) {
+        Tag.addConstructor(this);
+    }
 
     this.rx = this.getRx();
 }
@@ -54,7 +61,20 @@ Tag.prototype = {
     }
 };
 
-Tag.objects = {};
+Tag.getObject = function(name)
+{
+    return objects[name];
+};
+
+Tag.addConstructor = function(tag)
+{
+    return constructors.indexOf(tag.name) == -1 ? constructors.push(tag.name) : null;
+};
+
+Tag.getConstructors = function()
+{
+    return constructors;
+};
 
 /**
  * Create a new tag.
@@ -65,7 +85,7 @@ Tag.objects = {};
 Tag.extend = function(name,opts)
 {
     var tag = new Tag(name,opts);
-    Tag.objects[name] = tag;
+    objects[name] = tag;
     return tag;
 };
 
@@ -90,7 +110,7 @@ function TagMatch(match, template)
 {
     this.template   = template;
     this.input      = match[0];
-    this.tag        = Tag.objects[match[1]];
+    this.tag        = Tag.getObject(match[1]);
     this.key        = this.tag.name+template.level()+Object.keys(template.matches).length;
     this.args       = this.tag.parse ? this.tag.parse(match[2]) : match[2];
     this.scope      = match[3] || null;

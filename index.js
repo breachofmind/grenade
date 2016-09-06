@@ -37,6 +37,9 @@ function Factory()
      */
     this.compile = function(string)
     {
+        if (typeof string != 'string') {
+            throw new Error('Argument error: A string is required');
+        }
         var template = new Template(string);
         return function(object) {
             return template.render( new Data(object,null) );
