@@ -2,166 +2,145 @@
 
 var utils = require('./utils');
 
-var objects = {};
-var constructors = [];
-var counter = 0;
+var tags = {};
 
-function noop(args) {
-    return function() {
-        return args;
+function noop() {}
+function noopEmpty(data) { return ""; }
+function noopParse(args) { return args; }
+
+
+class TagObject
+{
+    constructor(match,template)
+    {
+        this.tag = match.tag;
+        this.template = template;
+        this.scope = match.scope;
+        this.index = match.index;
+        this.text = match.text;
+        this.args = match.args;
+        this.key = template.tags.length;
+
+        template.tags.push(this);
+
+        this.tag.evaluate.call(this,template);
+    }
+
+    replaceWith(what)
+    {
+        this.template.input = utils.replaceAt(this.template.input, this.index, this.index+this.text.length, what);
     }
 }
+
 
 /**
  * The Tag class.
- * @param name string
- * @param opts options
- * @constructor
+ * Contains details on how to handle a tag that is encountered in the template.
+ * Tags appear as: @mytag() ... @endmytag
+ * @author Mike Adamczyk <mike@bom.us>
  */
-function Tag(name,opts)
+class Tag
 {
-    if (!opts) opts = {};
-
-    this.name = name;
-    this.block = opts.block || false;
-    this.greedy = opts.greedy || false;
-    this.parse = opts.parse || null;
-    this.evaluate = opts.evaluate || noop(null);
-    this.render = opts.render || noop("");
-
-    if (! opts.hasOwnProperty('construct') || opts.construct == true) {
-        Tag.addConstructor(this);
+    constructor(name,opts)
+    {
+        this.name = name;
+        this.block = opts.block || false;
+        this.render = opts.render || noopEmpty;
+        this.parse = opts.parse || noopParse;
+        this.evaluate = opts.evaluate || noop;
+        this.immediate = opts.immediate || false;
     }
 
-    this.rx = this.getRx();
-}
+    handle(match,template)
+    {
+        if (match.close) return;
 
-Tag.prototype = {
+        match.args = this.parse(match.args,template);
+
+        this.evaluate(match,template);
+    }
 
     /**
-     * Get the appropriate regex expression given the tag options.
-     * @returns {RegExp}
+     * Get a tag object.
+     * @param name string
+     * @returns {*}
      */
-    getRx: function()
+    static get(name)
     {
-        var rxstr = `\\s*\\@(${this.name})\\((.*?)\\)\\s*$`;
-        if (this.block) {
-            var endtag = "end"+this.name;
-            rxstr += `([\\s\\S]+`;
-            if (this.greedy) rxstr += "?";
-            rxstr += `)\\@(${endtag})\\s*$`;
+        return tags[name];
+    }
+
+    /**
+     * Read a tag match.
+     * @param string
+     * @param template Template
+     * @returns {object}
+     */
+    static read(string,template,startIndex)
+    {
+        var close = match[1].substr(0,3) == "end";
+        var tagName = close ? match[1].substr(3).trim() : match[2];
+        var tag = Tag.get(tagName);
+        var args = close ? null : tag.parse(match[3],template);
+        var out = {
+            close: close,
+            tag: tag,
+            args: args,
+            index: match.index,
+            text: match[0],
+            context: match.input,
+        };
+        if (tag.immediate) {
+            new Tag.Object(out,template);
         }
-        return new RegExp(rxstr,'gm');
-    },
+        return out;
+    }
+    /**
+     * Find the outer matching tag, to indicate scope.
+     * @param tag
+     * @param input
+     * @param startIndex
+     * @returns {number}
+     */
+    static outer(tag,input,startIndex)
+    {
+        var open = 1;
+        var endtag = "@end"+tag.name;
+
+        for(let i=startIndex+1; i<input.length; i++)
+        {
+            if (input[i] !== endtag) {
+                continue;
+            }
+            // Did we encounter a closing tag? if true, reduce the open.
+            open = matches[i].close === true ? open - 1 : open + 1;
+
+            if (open == 0) {
+                match.outer = matches[i];
+                matches[i].outer = match;
+                var scope = match.context.slice(match.index+match.text.length, match.outer.index).trim();
+                match.scope = scope;
+                matches[i].scope = scope;
+                return matches[i];
+            }
+        }
+    }
 
     /**
-     * Find the tags in the given template.
-     * Returns TagMatch objects.
-     * @param template
-     * @returns {Array}
+     * Create a tag object.
+     * @param name
+     * @param opts
+     * @returns {Tag}
      */
-    find: function(template)
+    static extend(name,opts)
     {
-        utils.eachMatch(this.rx, template, function(match) {
-            return new TagMatch(match, template);
-        });
-    }
-};
-
-/**
- * Get a tag object.
- * @param name string
- * @returns {*}
- */
-Tag.getObject = function(name)
-{
-    return objects[name];
-};
-
-/**
- * Add a tag to the constructor.
- * Whenever a new template is created, a tag is searched for in the queue.
- * @param tag string
- * @returns {*}
- */
-Tag.addConstructor = function(tag)
-{
-    return constructors.indexOf(tag.name) == -1 ? constructors.push(tag.name) : null;
-};
-
-/**
- * Get the tag constructors.
- * @returns {Array}
- */
-Tag.getConstructors = function()
-{
-    return constructors;
-};
-
-/**
- * Create a new tag.
- * @param name string
- * @param opts options
- * @returns {Tag}
- */
-Tag.extend = function(name,opts)
-{
-    var tag = new Tag(name,opts);
-    objects[name] = tag;
-    return tag;
-};
-
-/**
- * Returns a template tag string.
- * @param match TagMatch
- * @returns {string}
- */
-Tag.renderer = function(match)
-{
-    return '${__data.tag("'+match.key+'",this)}';
-};
-
-
-/**
- * A matching tag in the document.
- * @param match array
- * @param template Template
- * @constructor
- */
-function TagMatch(match, template)
-{
-    counter++;
-
-    this.indexes    = [match.index,match.lastIndex];
-    this.template   = template;
-    this.input      = match[0];
-    this.tag        = Tag.getObject(match[1]);
-    this.key        = this.tag.name+counter;
-    this.args       = this.tag.parse ? this.tag.parse(match[2]) : match[2];
-    this.scope      = match[3] || null;
-
-    if (! this.tag) {
-        throw new Error('Tag object was not found: '+match[1])
+        return tags[name] = new Tag(name,opts);
     }
 
-    template.matches[this.key] = this;
-
-    // Evaluating the tag can effect the template input string.
-    this.tag.evaluate(template,this);
-
-
+    static get Object()
+    {
+        return TagObject;
+    }
 }
-
-/**
- * Replace the matched input with the given string.
- * @example @section("content") ... @endsection -> ""
- * @param withWhat string
- * @returns {*}
- */
-TagMatch.prototype.replace = function(withWhat)
-{
-    return this.template.input = utils.replaceAt(this.template.input, this.indexes[0], this.indexes[0]+this.input.length, withWhat);
-};
-
 
 module.exports = Tag;

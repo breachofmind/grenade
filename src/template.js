@@ -4,131 +4,111 @@ var _     = require('lodash');
 var fs    = require('fs');
 var path  = require('path');
 var utils = require('./utils');
-var Promise = require('bluebird');
 var Tag   = require('./tag');
-var beautify = require('js-beautify').html;
 
-const VAR_RX = /\$\{((?!\_\_).*?)\}/gm;
-const FUNC_RX = /\$\{(\_\_.*?)\}/gm;
+const RX_VAR = /\$\{(.*?)\}/gm;
+const RX_FNC = /\$\{(\_\_.*?)\}/gm;
+//const RX_TAG = /\s*?\@((\w+)\((.*)\)|(\w+))/gm;
+const RX_TAG = /\s*?(\@.*[^\s+])/gm;
+const RX_LINE = /\@((\w+)\((.*)\)|(\w+))/;
 
-/**
- * The Template class.
- * @param input string
- * @param parent Template
- * @constructor
- */
-function Template(input,parent)
+class Template
 {
-    this.input = input;
-    this.parent = parent || null;
-    this.matches = {};
-
-    this.getTagMatches(Tag.getConstructors());
-    this.getVarMatches();
-
-    this.source = this.generateSource();
-}
-
-
-Template.prototype = {
-
-    /**
-     * Return the root matching tag.
-     * @returns {Template}
-     */
-    root: function()
+    constructor(input,parent)
     {
-        var parent = this.parent;
-        while (parent) {parent = parent.parent;}
-        return parent;
-    },
+        this.input = input;
+        this.output = [];
+        this.parent = parent;
+        this.tags = [];
 
+        this.walk();
+    }
 
-    /**
-     * Return a list of all tag matches.
-     * @param tags array
-     * @returns {Array|*}
-     */
-    getTagMatches: function(tags)
+    walk()
     {
-        for (let i=0; i<tags.length; i++) {
-            Tag.getObject(tags[i]).find(this);
+        this.output = this.input.split(RX_TAG);
+        var tags = [];
+
+        function scan(line)
+        {
+            if (line=="" || line[0] !== "@") {
+                return null;
+            }
+            var match = RX_LINE.exec(line);
+            var opening = match[2] ? true : false;
+            var tag = opening ? Tag.get(match[2]) : Tag.get(match[1].replace("end",""));
+
+            return {
+                object:tag,
+                name: tag.name,
+                opening: opening,
+                args:opening? tag.parse(match[3],this): null,
+                start:null,
+                end:null,
+                scope:null
+            }
         }
 
-        return this.matches;
-    },
-
-    /**
-     * Match variables in the input text and replace with accessors.
-     * @returns void
-     */
-    getVarMatches: function()
-    {
-        utils.eachMatch(VAR_RX, this, function(match) {
-            var string = match[1];
-            var args = "";
-            if (string[0] == "=" || string[0] == "#") {
-                args = '"'+ _.escape(string.replace(string[0],""))+'"';
-                args += ',"'+string[0]+'"';
-            } else {
-                args = '"'+ _.escape(string)+'"';
+        function join(start,end) {
+            var output = "";
+            for (let i=start; i<end; i++) {
+                output += this.output[i];
             }
+            return output;
+        }
 
-            var func = '${__data.prop('+args+')}';
+        for(let i=0; i<this.output.length; i++)
+        {
+            let line = this.output[i];
+            let tag = scan.call(this,line);
 
-            this.input = utils.replaceAt(this.input,match.index,match.index + match[0].length, func);
+            if (tag) {
+                tag.start = i;
+                if (tag.object.block) {
+                    let open = 1;
+                    for(let n=i+1; n<this.output.length; n++)
+                    {
+                        let close = scan.call(this,this.output[n]);
 
-        }.bind(this))
-    },
+                        if (!close || close.object.name !== tag.object.name) {
+                            continue;
+                        }
+                        open = close.opening ? open + 1 : open - 1;
+                        if (open == 0) {
+                            tag.end = n;
+                            tag.scope = new Template(join.call(this,i+1,n), this);
+                            break;
+                        }
+                    }
+                    this.output[i] = tag.scope;
+                    for (let n=tag.start+1; n<tag.end; n++)
+                    {
+                        this.output[n] = "";
+                    }
+                }
 
-    /**
-     * Creates accessor functions for ${variable} data.
-     * This is evaluated when the template is rendered later.
-     * @returns object
-     */
-    generateSource: function()
-    {
-        var output = this.input.split(FUNC_RX);
-
-        var source = output.map(function(part) {
-            if (part[0] != "_") {
-                return JSON.stringify(part);
+                if (tag.opening) {
+                    tag.object.evaluate(tag,this);
+                    tags.push(tag);
+                }
             }
-            return part;
-        }).join(" + ");
+        }
 
-        return new Function("__data", "var out = ''; try { out = "+source+"; } catch(e) { out = e; }; return out;");
-    },
-
-    /**
-     * Replaces a part of the template input.
-     * @param str string
-     * @param withWhat string to replace with
-     * @returns {Template}
-     */
-    replace: function(str, withWhat) {
-        this.input = this.input.replace(str,withWhat);
-        return this;
-    },
-
-    /**
-     * Erases the given string in the template.
-     * @param str string
-     * @returns {Template}
-     */
-    erase: function(str) {
-        return this.replace(str,"");
-    },
-
-    /**
-     * Render the template.
-     * @param data object
-     * @returns {string}
-     */
-    render: function(data)
-    {
-        return this.source.apply(this,[data]);
+        this.tags = tags;
     }
-};
+
+    render(data)
+    {
+        var template = this;
+        return this.output.map(function(line) {
+            if (line instanceof Template) {
+                return line.render(data);
+            } else if (typeof line == 'function') {
+                return line(data,template);
+            }
+            return line;
+        }).join("");
+    }
+}
 
 module.exports = Template;

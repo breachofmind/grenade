@@ -25,10 +25,13 @@ var data = {
     ]
 };
 
-factory.setRootPath(__dirname+"/views/");
-factory.ext = "htm";
-factory.debug(true);
-var template = factory.load('content');
-//console.log(template);
+factory.rootPath = __dirname+"/views/";
+factory.extension = "htm";
+factory.prettyPrint = true;
 
-console.log(template(data));
+factory.load(factory.filepath('content'), function(err,template) {
+
+    var str = template(data);
+
+    console.log(str);
+});
