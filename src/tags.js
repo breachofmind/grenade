@@ -28,6 +28,7 @@ module.exports = function(factory)
             }
             template.parent.sections[tag.args] = function(scope) {
                 template.output[tag.start] = scope;
+                template.generate();
             }
         }
     });
@@ -56,7 +57,7 @@ module.exports = function(factory)
         },
 
         evaluate: function(tag,template) {
-            template.output[tag.start] = tag.renderer;
+            template.output[tag.start] = tag;
         },
 
         render: function(data) {
@@ -71,12 +72,20 @@ module.exports = function(factory)
         block: true,
         parse: function(args) {
             return args;
+        },
+        evaluate: function(tag,template)
+        {
+            template.output[tag.start] = tag;
         }
     });
     Tag.extend('unless', {
         block: true,
         parse: function(args) {
             return args;
+        },
+        evaluate: function(tag,template)
+        {
+            template.output[tag.start] = tag;
         }
     });
 

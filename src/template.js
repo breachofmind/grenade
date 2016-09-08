@@ -14,9 +14,10 @@ class Template
         this.output = [];
         this.parent = parent;
         this.tags = [];
+        this.source = null;
 
         this.walk();
-        this.source();
+        this.generate();
     }
 
     /**
@@ -30,7 +31,10 @@ class Template
         {
             let match = this.scan(i);
 
-            if (! match) continue;
+            if (! match) {
+                this.vars(i);
+                continue;
+            }
 
             // If matching a tag block, skip ahead after finding closing.
             // Finding an outer tag will create a new scoped Template object.
@@ -41,19 +45,14 @@ class Template
             // It's safe to add it to our tag array.
             if (match.opening) {
                 match.tag.evaluate(match,this);
-                this.tags.push(match);
+                match.add();
             }
-        }
-
-        // Of the strings left over, find variables.
-        for (let i=0; i<this.output.length; i++) {
-            this.vars(i);
         }
     }
 
     /**
      * Get the outer matching tag.
-     * @param match object
+     * @param match TagObject
      * @returns {number}
      */
     outer(match)
@@ -64,7 +63,7 @@ class Template
         {
             var close = this.scan(i);
 
-            if (!close || close.tag.name !== match.tag.name) {
+            if (!close || close.name !== match.name) {
                 continue;
             }
 
@@ -73,12 +72,11 @@ class Template
             if (open == 0) {
                 match.end = i;
                 match.scope = new Template(this.join(startIndex,i), this);
-                break;
+                this.output[match.start] = match.scope;
+                this.output[match.end] = "";
+                return i;
             }
         }
-        this.output[match.start] = match.scope;
-        this.output[match.end] = "";
-        return i;
     }
 
     join(start,end)
@@ -99,20 +97,8 @@ class Template
         if (! line || line=="" || line[0] !== "@") {
             return null;
         }
-        var match = utils.RX_TAG.exec(line);
-        var opening = match[2] ? true : false;
-        var tag = opening ? Tag.get(match[2]) : Tag.get(match[1].replace("end",""));
 
-        return {
-            tag: tag,
-            name: tag.name,
-            opening: opening,
-            template: this,
-            args: opening ? tag.parse(match[3],this): null,
-            start: opening ? index : null,
-            end: null,
-            scope: null
-        };
+        return new TagObject(utils.RX_TAG.exec(line), this, index);
     }
 
     vars(index)
@@ -138,22 +124,82 @@ class Template
         this.output[index] = arr;
     }
 
-    source()
+    generate()
     {
+        var src = [];
 
+        this.output.map(function(line)
+        {
+            if (!line || line == "") return;
+
+            if (line instanceof Template) {
+
+                return src.push(line.source);
+
+            } else if (line instanceof TagObject) {
+
+                return src.push(`this.tag(data,${line.key})`);
+
+            } else if (Array.isArray(line)) {
+                return src.push (line.map(function(ln) {
+                    if (typeof ln == 'string') return JSON.stringify(ln);
+                    if (typeof ln == 'object') {
+                        var args = JSON.stringify(ln);
+                        return `this.prop(data,${args})`;
+                    }
+                }).join(" + "));
+            } else {
+                return src.push(JSON.stringify(line)); // just a string
+            }
+
+        });
+
+        //this.source = `(function() {try { return ${src.join(" + ")} } catch (e) { return e; };})()`;
+        this.source = src.join(" + ");
+    }
+
+    prop(data,args)
+    {
+        return "";
+    }
+
+    tag(data,key)
+    {
+        var tag = this.tags[key];
+        return tag.name;
     }
 
     render(data)
     {
-        var template = this;
-        return this.output.map(function(line) {
-            if (line instanceof Template) {
-                return line.render(data);
-            } else if (typeof line == 'function') {
-                return line(data,template);
-            }
-            return line;
-        }).join("");
+        var fn = new Function('data', "return" + this.source);
+
+        var str = fn.apply(this,[data]);
+        return str;
+    }
+}
+
+class TagObject
+{
+    constructor(match,template,index)
+    {
+        var opening = match[2] ? true : false;
+        var tag = opening ? Tag.get(match[2]) : Tag.get(match[1].replace("end",""));
+
+        this.key = null;
+        this.tag = tag;
+        this.name = tag.name;
+        this.opening = opening;
+        this.template = template;
+        this.args = opening ? tag.parse(match[3], template) : null;
+        this.start = index;
+        this.end = null;
+        this.scope = null;
+    }
+
+    add()
+    {
+        this.key = this.template.tags.length;
+        this.template.tags.push(this);
     }
 }
 

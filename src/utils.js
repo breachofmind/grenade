@@ -16,7 +16,6 @@ module.exports = {
         var mode = chr == "=" || chr == "#" ? chr : null;
         var filters = property.split(" | ",2);
         return {
-            index: index,
             mode: mode,
             property: mode ? property.replace(chr,"") : property,
             filters: filters.length > 1 ? filters[1].split(",") : null
