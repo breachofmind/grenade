@@ -2,47 +2,27 @@
 
 module.exports = {
 
-    /**
-     * Returns all matches in a string, given the regex.
-     * @param rx
-     * @param str
-     * @returns {Array}
-     */
-    matches: function(rx,str)
-    {
-        var out = [];
-        do {
-            var m = rx.exec(str);
-            if (m) {
-                m.lastIndex = rx.lastIndex;
-                out.push(m);
-            }
-        } while (m);
-        return out;
-    },
+    RX_VARS: /(\$\{.*?\})/gm,
+    RX_VAR: /\$\{(.*?)\}/,
+    RX_TAGS: /\s*?(\@.*[^\s+])/gm,
+    RX_TAG: /\@((\w+)\((.*)\)|(\w+))/,
 
-    /**
-     * Calls a function against each match.
-     * @param rx RegEx
-     * @param template Template
-     * @param handler function
-     * @returns void
-     */
-    eachMatch: function(rx,template,handler)
-    {
-        rx.lastIndex = 0;
-        do {
-            var m = rx.exec(template.input);
-            if (m) {
-                m.lastIndex = rx.lastIndex;
-                handler(m);
+    MODE_RAW: "=",
+    MODE_COMMENT: "#",
 
-                // Start over from the beginning, since the handler
-                // will replace parts of the template string.
-                rx.lastIndex = 0;
-            }
-        } while(m);
-    },
+    parseVar:function(property,index)
+    {
+        var chr = property[0];
+        var mode = chr == "=" || chr == "#" ? chr : null;
+        var filters = property.split(" | ",2);
+        return {
+            index: index,
+            mode: mode,
+            property: mode ? property.replace(chr,"") : property,
+            filters: filters.length > 1 ? filters[1].split(",") : null
+        }
+    }
+    ,
 
     /**
      * Replaces a part of a string, which should be faster than string.replace().

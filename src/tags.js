@@ -1,15 +1,9 @@
 var Tag = require('./tag');
 var Template = require('./template');
 
-function evaluate(args,template)
-{
-    return eval(args);
-}
-
 module.exports = function(factory)
 {
     Tag.extend('extends', {
-        parse: evaluate,
         evaluate: function(tag,template) {
             template.output[tag.start] = new Template(factory.contents(tag.args),template);
         }
@@ -18,7 +12,6 @@ module.exports = function(factory)
 
     Tag.extend('section', {
         block: true,
-        parse: evaluate,
         evaluate: function(tag,template) {
             if (template.sections[tag.args]) {
                 template.sections[tag.args](tag.scope);
@@ -29,7 +22,6 @@ module.exports = function(factory)
 
 
     Tag.extend('yield', {
-        parse: evaluate,
         evaluate: function(tag,template) {
             if (! template.parent.sections) {
                 template.parent.sections = {};
@@ -41,7 +33,6 @@ module.exports = function(factory)
     });
 
     Tag.extend('include', {
-        parse: evaluate,
         evaluate: function(tag,template) {
             template.output[tag.start] = new Template(factory.contents(tag.args),template);
         }
@@ -65,16 +56,11 @@ module.exports = function(factory)
         },
 
         evaluate: function(tag,template) {
-            template.output[tag.start] = this.render;
+            template.output[tag.start] = tag.renderer;
         },
 
         render: function(data) {
             var out = "";
-            var array = data.items;
-            array.forEach(function(object){
-                out+= "1";
-
-            });
 
             return out;
         }
@@ -83,9 +69,15 @@ module.exports = function(factory)
 
     Tag.extend('if', {
         block: true,
+        parse: function(args) {
+            return args;
+        }
     });
     Tag.extend('unless', {
-        block: true
+        block: true,
+        parse: function(args) {
+            return args;
+        }
     });
 
 };
