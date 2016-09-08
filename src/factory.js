@@ -46,6 +46,11 @@ class TemplateFactory
         return fn;
     }
 
+    precompile(string)
+    {
+        // Todo
+    }
+
     /**
      * Assemble a filename.
      * @param filename string

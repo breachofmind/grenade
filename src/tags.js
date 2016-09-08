@@ -1,47 +1,52 @@
+var _ = require('lodash');
 var Tag = require('./tag');
 var Template = require('./template');
 
 module.exports = function(factory)
 {
     Tag.extend('extends', {
-        evaluate: function(tag,template) {
-            template.output[tag.start] = new Template(factory.contents(tag.args),template);
+        evaluate: function() {
+            this.template.output[this.index] = new Template(factory.contents(this.args), this.template);
         }
     });
 
 
     Tag.extend('section', {
         block: true,
-        evaluate: function(tag,template) {
-            if (template.sections[tag.args]) {
-                template.sections[tag.args](tag.scope);
-            }
-            template.output[tag.start] = "";
+        parse: function(args) {
+            var name = eval(args);
+            if (! this.template.sections) this.template.sections = {};
+            this.template.sections[name] = this;
+            return name;
+        },
+        evaluate: function() {
+            this.erase();
+        },
+        render: function(data)
+        {
+            return this.scope.render(data);
         }
     });
 
 
     Tag.extend('yield', {
-        evaluate: function(tag,template) {
-            if (! template.parent.sections) {
-                template.parent.sections = {};
-            }
-            template.parent.sections[tag.args] = function(scope) {
-                template.output[tag.start] = scope;
-                template.generate();
+        evaluate: function() {
+            if (this.template.parent.sections) {
+                var scope = this.template.parent.sections[this.args]; // TagObject
+                this.replaceWith(scope);
             }
         }
     });
 
     Tag.extend('include', {
-        evaluate: function(tag,template) {
-            template.output[tag.start] = new Template(factory.contents(tag.args),template);
+        evaluate: function() {
+            this.replaceWith(new Template(factory.contents(this.args), this.template));
         }
     });
 
     Tag.extend('foreach', {
         block: true,
-        parse: function(args,template) {
+        parse: function(args) {
             var index,key,array;
             var parts = args.trim().split(" in ",2);
             array = parts[1];
@@ -56,14 +61,21 @@ module.exports = function(factory)
             return {key: key, array: array, index:index}
         },
 
-        evaluate: function(tag,template) {
-            template.output[tag.start] = tag;
-        },
-
         render: function(data) {
-            var out = "";
+            var out = [];
+            var array = this.template.value(data, this.args.array) || [];
 
-            return out;
+            array.forEach(function(object, i) {
+                var copy = {
+                    $parent: _.clone(data)
+                };
+                copy[this.args.key] = object;
+                if (this.args.index) copy[this.args.index] = i.toString();
+
+                out.push(this.scope.render(copy));
+            }.bind(this));
+
+            return out.join("");
         }
     });
 
@@ -73,9 +85,42 @@ module.exports = function(factory)
         parse: function(args) {
             return args;
         },
-        evaluate: function(tag,template)
+        evaluate: function()
         {
-            template.output[tag.start] = tag;
+            this.ifTrue = this.scope;
+            this.ifFalse = null;
+
+            // find the else statement.
+            var $else = this.scope.output.indexOf('@else');
+            if ($else > -1) {
+                var truthy = [], falsey = [];
+                var outputs = this.scope.output;
+                for (var i=0; i<outputs.length; i++) {
+                    if (i<$else) truthy.push(outputs[i]);
+                    if (i>$else) falsey.push(outputs[i]);
+                }
+                this.ifTrue = new Template(truthy, this.template);
+                this.ifFalse = new Template(falsey, this.template);
+            }
+        },
+
+        render: function(data)
+        {
+            var keys = Object.keys(data).map(function(key) {
+                try {
+                    var object = JSON.stringify(data[key]);
+                } catch(e) {}
+                return `var ${key} = ${object};`;
+            }).join("");
+            var src = `try { ${keys} return ${this.args} } catch(e) { return true; }`;
+            var fn = new Function('data', src);
+            var truthy = fn.apply(this,[data]);
+
+            if (truthy) {
+                return this.ifTrue.render(data);
+            }
+
+            return this.ifFalse ? this.ifFalse.render(data) : "";
         }
     });
     Tag.extend('unless', {
@@ -85,7 +130,7 @@ module.exports = function(factory)
         },
         evaluate: function(tag,template)
         {
-            template.output[tag.start] = tag;
+            //template.output[tag.start] = tag;
         }
     });
 

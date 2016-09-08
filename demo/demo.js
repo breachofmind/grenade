@@ -1,6 +1,6 @@
 "use strict";
 
-var factory = require('../index');
+var factory = require('../index')();
 
 var data = {
     title: "Mike",

@@ -5,202 +5,94 @@ var fs    = require('fs');
 var path  = require('path');
 var utils = require('./utils');
 var Tag   = require('./tag');
+var TagObject = require('./match');
+var Walker = require('./walker');
 
 class Template
 {
     constructor(input,parent)
     {
-        this.input = input;
-        this.output = [];
+        var walker = new Walker(this);
+
+        this.input = Array.isArray(input) ? input : input.split(utils.RX_TAGS);
         this.parent = parent;
-        this.tags = [];
-        this.source = null;
+        this.output = [];
 
-        this.walk();
-        this.generate();
-    }
-
-    /**
-     * Walk through the input and find some tags.
-     */
-    walk()
-    {
-        this.output = this.input.split(utils.RX_TAGS);
-
-        for(let i=0; i<this.output.length; i++)
-        {
-            let match = this.scan(i);
-
-            if (! match) {
-                this.vars(i);
-                continue;
-            }
-
-            // If matching a tag block, skip ahead after finding closing.
-            // Finding an outer tag will create a new scoped Template object.
-            if (match.tag.block) {
-                i = this.outer(match);
-            }
-            // A match will have a start and end index and scope.
-            // It's safe to add it to our tag array.
-            if (match.opening) {
-                match.tag.evaluate(match,this);
-                match.add();
-            }
-        }
-    }
-
-    /**
-     * Get the outer matching tag.
-     * @param match TagObject
-     * @returns {number}
-     */
-    outer(match)
-    {
-        var open = 1;
-        var startIndex = match.start + 1;
-        for(var i = startIndex; i < this.output.length; i++)
-        {
-            var close = this.scan(i);
-
-            if (!close || close.name !== match.name) {
-                continue;
-            }
-
-            open = close.opening ? open + 1 : open - 1;
-
-            if (open == 0) {
-                match.end = i;
-                match.scope = new Template(this.join(startIndex,i), this);
-                this.output[match.start] = match.scope;
-                this.output[match.end] = "";
-                return i;
-            }
-        }
-    }
-
-    join(start,end)
-    {
-        var output = "";
-        for (var i=start; i<end; i++) {
-            output += this.output[i];
-            this.output[i] = "";
-        }
-        return output;
-    }
-
-
-    scan(index)
-    {
-        var line = this.output[index];
-
-        if (! line || line=="" || line[0] !== "@") {
-            return null;
+        if (! this.parent) {
+            this.tags = [];
         }
 
-        return new TagObject(utils.RX_TAG.exec(line), this, index);
-    }
-
-    vars(index)
-    {
-        var line = this.output[index];
-        if (!line || !line.length) {
-            return;
-        }
-
-        var arr = line.split(utils.RX_VARS);
-        if (arr.length == 1) {
-            return;
-        }
-
-        for(var i=0; i<arr.length; i++)
-        {
-            var match = utils.RX_VAR.exec(arr[i]);
-            if (! match) continue;
-
-            arr[i] = utils.parseVar(match[1],i);
-        }
-
-        this.output[index] = arr;
-    }
-
-    generate()
-    {
-        var src = [];
-
-        this.output.map(function(line)
-        {
-            if (!line || line == "") return;
-
-            if (line instanceof Template) {
-
-                return src.push(line.source);
-
-            } else if (line instanceof TagObject) {
-
-                return src.push(`this.tag(data,${line.key})`);
-
-            } else if (Array.isArray(line)) {
-                return src.push (line.map(function(ln) {
-                    if (typeof ln == 'string') return JSON.stringify(ln);
-                    if (typeof ln == 'object') {
-                        var args = JSON.stringify(ln);
-                        return `this.prop(data,${args})`;
-                    }
-                }).join(" + "));
-            } else {
-                return src.push(JSON.stringify(line)); // just a string
-            }
-
+        walker.walk();
+        this.output.map(function(object) {
+            if (object instanceof TagObject) object.evaluate();
         });
 
-        //this.source = `(function() {try { return ${src.join(" + ")} } catch (e) { return e; };})()`;
-        this.source = src.join(" + ");
+        this.source = this.javascript();
     }
 
-    prop(data,args)
+    get root()
     {
-        return "";
+        var parent = this.parent;
+        if (! parent) return this;
+        while(parent.parent) {
+            parent = parent.parent;
+        }
+        return parent;
     }
 
-    tag(data,key)
+    javascript()
     {
-        var tag = this.tags[key];
-        return tag.name;
+        var src = [];
+        for (var i=0; i< this.output.length; i++)
+        {
+            var object = this.output[i];
+
+            if (typeof object == 'string') {
+                src.push (JSON.stringify(object));
+            }
+            else if (object instanceof Template) {
+                src.push (object.source);
+            }
+            else if (object instanceof TagObject) {
+                src.push (`this.tag(data, ${object.key})`);
+            }
+            else if (Array.isArray(object)) {
+                src.push (object.source());
+            }
+        }
+
+        return src.join(" + ");
+    }
+
+    tag(data, index)
+    {
+        var match = this.root.tags[index];
+        return match.render(data);
+    }
+
+    prop(data, args)
+    {
+        var value = this.value(data,args.property);
+        return args.mode ?  value : _.escape(value);
+    }
+
+    value(data, property)
+    {
+        // data is the current scoped value.
+        var value = _.get(data, property);
+        if (! value && data.$parent) {
+            return this.value(data.$parent, property);
+        }
+        return value;
     }
 
     render(data)
     {
-        var fn = new Function('data', "return" + this.source);
+        var fn = new Function('data', `try { return ${this.source}; } catch(e) { return e; }`);
 
-        var str = fn.apply(this,[data]);
-        return str;
+        return fn.apply(this,[data]);
     }
 }
 
-class TagObject
-{
-    constructor(match,template,index)
-    {
-        var opening = match[2] ? true : false;
-        var tag = opening ? Tag.get(match[2]) : Tag.get(match[1].replace("end",""));
-
-        this.key = null;
-        this.tag = tag;
-        this.name = tag.name;
-        this.opening = opening;
-        this.template = template;
-        this.args = opening ? tag.parse(match[3], template) : null;
-        this.start = index;
-        this.end = null;
-        this.scope = null;
-    }
-
-    add()
-    {
-        this.key = this.template.tags.length;
-        this.template.tags.push(this);
-    }
-}
 
 module.exports = Template;
