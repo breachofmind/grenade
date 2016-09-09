@@ -50,5 +50,22 @@ module.exports = {
         var compiler = new Compiler(opts);
 
         return compiler.compile(string);
+    },
+
+    /**
+     * Alias to precompiler.
+     * @param opts
+     * @param string
+     * @returns {Function}
+     */
+    precompile: function(opts,string)
+    {
+        if (arguments.length == 1) {
+            string = arguments[0];
+            opts = {};
+        }
+        var compiler = new Compiler(opts);
+
+        return compiler.precompile(string);
     }
 };

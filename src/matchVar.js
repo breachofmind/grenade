@@ -3,15 +3,22 @@
 const MODE_COMMENT = "#";
 const MODE_RAW = "=";
 
+/**
+ * A matching variable in the template.
+ */
 class MatchVar
 {
+    /**
+     * Parse a string containing a variable.
+     * @param property string
+     * @param template Template
+     */
     constructor(property,template)
     {
         this.key = null;
         this.index = null;
         this.text = property;
         this.template = template;
-        this.args = null;
         this.property = property;
         this.mode = null;
         this.filters = [];
@@ -38,6 +45,7 @@ class MatchVar
         // Remove the outer braces.
         property = property.replace("${", "");
         property = property.substr(0, property.length-1);
+        this.text = property;
 
         // Check the evaluation mode.
         var chr = property[0];
@@ -46,16 +54,16 @@ class MatchVar
             property = property.replace(this.mode,"");
         }
 
-        // Get the function arguments.
-        if(this.isFunction) {
-            this.args = property.slice(property.indexOf("(")+1, property.length-1);
-            property = property.substr(0,property.indexOf("("));
-        }
-
         // Get the filter functions.
         var filters = property.split(" | ",2);
         if (filters.length > 1) {
             this.filters = filters[1].split(",");
+            property = filters[0].trim();
+        }
+
+        // Get the function arguments.
+        if (this.isFunction) {
+            property = property.substr(0,property.indexOf("("));
         }
 
         this.property = property;
@@ -73,7 +81,17 @@ class MatchVar
         this.template.compiler.vars.push(this);
 
         this.source = `this.prop(data,${this.key})`;
+        if (this.isFunction) {
+            this.source = `(function(){ with(data) {return ${this.text}; } })()`;
+        }
+    }
+
+    toString()
+    {
+        return this.source;
     }
 }
+
+
 
 module.exports = MatchVar;

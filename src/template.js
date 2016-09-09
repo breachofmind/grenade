@@ -33,6 +33,21 @@ class Template
         this.source = this.generateSource();
     }
 
+    get level()
+    {
+        var parent = this.parent,
+            level = 0;
+        while(parent) {
+            parent = parent.parent;
+            level ++;
+        }
+        return level;
+    }
+
+    /**
+     * Generate the javascript source code from the output.
+     * @returns {string}
+     */
     generateSource()
     {
         var source = this.output.map(function(object) {
@@ -56,6 +71,12 @@ class Template
         return source.join(" + ");
     }
 
+    /**
+     * Process and render a tag.
+     * @param data object
+     * @param index number
+     * @returns {*}
+     */
     tag(data, index)
     {
         //var match = this.root.tags[index];
@@ -63,30 +84,70 @@ class Template
         return match.render(data);
     }
 
+    /**
+     * Process and render a variable.
+     * @param data object
+     * @param index number
+     * @returns {*}
+     */
     prop(data,index)
     {
         var object = this.compiler.vars[index];
         var value = this.value(data,object.property);
-        return object.mode ? value : _.escape(value);
+        if (typeof value !== 'undefined') {
+            return object.mode ? value.toString() : _.escape(value).toString();
+        }
+        return value;
     }
 
-
+    /**
+     * Get the value of a property.
+     * @param data object
+     * @param property string
+     * @returns {*}
+     */
     value(data, property)
     {
         // data is the current scoped value.
         var value = _.get(data, property);
-        if (! value && data.$parent) {
+        if (typeof value=='undefined' && data.$parent) {
             return this.value(data.$parent, property);
         }
         return value;
     }
 
+    /**
+     * Render the template.
+     * @param data
+     * @returns {*}
+     */
     render(data)
     {
-        var fn = new Function('data', `try { return ${this.source}; } catch(e) { return e; }`);
+        if (! this.source || this.source == "") {
+            return "";
+        }
+        var src = `
+        var __out = "";
+        try { __out = ${this.source}; } catch(e) { __out = rethrow(e); }
+        return __out;
+        `;
+        var fn = new Function('data, rethrow', src);
 
-        return fn.apply(this,[data]);
+        return fn.apply(this,[data,rethrow]);
     }
+
+    /**
+     * Return the template as a string.
+     * @returns {string|*}
+     */
+    toString()
+    {
+        return this.source;
+    }
+}
+
+function rethrow(e) {
+    return e;
 }
 
 module.exports = Template;

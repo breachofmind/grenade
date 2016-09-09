@@ -21,7 +21,6 @@ module.exports = function(compiler)
         },
         evaluate: function() {
             this.erase();
-            this.source = this.scope.source;
         },
         render: function(data) {
             return this.scope.render(data);
@@ -32,8 +31,9 @@ module.exports = function(compiler)
     Tag.extend('yield', {
         evaluate: function() {
             if (this.template.parent.sections) {
-                var scope = this.template.parent.sections[this.args]; // TagObject
-                this.replaceWith(scope);
+                var tag = this.template.parent.sections[this.args]; // TagObject
+                tag.source = tag.scope.source;
+                this.replaceWith(tag);
             }
         }
     });
@@ -70,7 +70,7 @@ module.exports = function(compiler)
                     $parent: _.clone(data)
                 };
                 copy[this.args.key] = object;
-                if (this.args.index) copy[this.args.index] = i.toString();
+                if (this.args.index) copy[this.args.index] = i;
 
                 out.push(this.scope.render(copy));
             }.bind(this));
@@ -83,7 +83,7 @@ module.exports = function(compiler)
     Tag.extend('if', {
         block: true,
         parse: function(args) {
-            return args;
+            return new Function('data', `with(data) { return ${args}; }`);
         },
         evaluate: function()
         {
@@ -106,15 +106,7 @@ module.exports = function(compiler)
 
         render: function(data)
         {
-            var keys = Object.keys(data).map(function(key) {
-                try {
-                    var object = JSON.stringify(data[key]);
-                } catch(e) {}
-                return `var ${key} = ${object};`;
-            }).join("");
-            var src = `try { ${keys} return ${this.args} } catch(e) { return true; }`;
-            var fn = new Function('data', src);
-            var truthy = fn.apply(this,[data]);
+            var truthy = this.args.apply(this,[data]);
 
             if (truthy) {
                 return this.ifTrue.render(data);

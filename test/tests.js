@@ -1,4 +1,4 @@
-var nade     = require('../index');
+var grenade  = require('../index');
 var chai     = require('chai');
 var expect   = chai.expect;
 var should   = chai.should();
@@ -6,34 +6,36 @@ var fs       = require('fs');
 var path     = require('path');
 var _        = require('lodash');
 
+var demopath = __dirname+"/../demo/";
+var compiler = new grenade.Compiler({
+    rootPath: demopath
+});
 
 describe('configuration', function()
 {
-    it('should be a factory object', function(){
-        expect(nade).to.be.a('object');
+    it('should be an object', function(){
+        expect(grenade).to.be.a('object');
+        expect(compiler).to.be.an.instanceof(grenade.Compiler);
     });
 
     it('should set a root path', function(){
-        var demoPath = __dirname+"/../demo/";
-        expect(nade.getRootPath()).to.equal('./'); // Default path.
-        nade.setRootPath(demoPath);
-        expect(nade.getRootPath()).to.equal(path.normalize(demoPath));
+        expect(compiler.rootPath).to.equal(path.normalize(demopath));
     })
 });
 
 describe('basic strings', function()
 {
     it('should throw error if no arguments given', function(){
-        expect(nade.compile).to.throw('Argument error: A string is required');
+        expect(compiler.compile).to.throw('A string is required.');
     });
-    var t0 = nade.compile('');
+    var t0 = grenade.compile('');
     it('should return empty string if given empty string', function(){
         expect(t0({})).to.equal('');
         expect(t0()).to.equal('');
         expect(t0({test:'string'})).to.equal('');
     });
 
-    var t1 = nade.compile('just a string');
+    var t1 = grenade.compile('just a string');
     it('should return same string if no tags are present', function(){
         expect(t1({})).to.equal('just a string');
         expect(t1()).to.equal('just a string');
@@ -49,13 +51,13 @@ describe('variables', function()
         comment:"comment"
     };
 
-    var tVarEscaped = nade.compile("${test}");
-    var tVarRaw = nade.compile("${=test}");
-    var tHtmlEscaped = nade.compile("${html}");
-    var tHtmlRaw = nade.compile("${=html}");
-    var tComment1 = nade.compile("${#comment}");
-    var tComment2 = nade.compile("${#comment is a long string, with commas and stuff}");
-    var t2Vars = nade.compile("${test}${comment}");
+    var tVarEscaped = grenade.compile("${test}");
+    var tVarRaw = grenade.compile("${=test}");
+    var tHtmlEscaped = grenade.compile("${html}");
+    var tHtmlRaw = grenade.compile("${=html}");
+    var tComment1 = grenade.compile("${#comment}");
+    var tComment2 = grenade.compile("${#comment is a long string, with commas and stuff}");
+    var t2Vars = grenade.compile("${test}${comment}");
 
     it('should resolve escaped variable, non-html', function(){
         expect(tVarEscaped(o)).to.equal(o.test);

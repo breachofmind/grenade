@@ -12,9 +12,13 @@ class Compiler
     {
         opts = opts || {};
 
+        this.start = Date.now();
+
+        this.debug = opts.debug || false;
+
         this.extension = opts.extension || "htm";
 
-        this.rootPath = opts.rootPath || "./";
+        this.rootPath = path.normalize(opts.rootPath || "./");
 
         this.prettyPrint = opts.prettyPrint || false;
 
@@ -26,6 +30,15 @@ class Compiler
         this.template = null;
         this.tags = [];
         this.vars = [];
+    }
+
+    log(message)
+    {
+        if (this.debug) {
+            var elasped = Date.now() - this.start;
+            arguments[0] = `[debug] ${elasped}ms - ${arguments[0]}`;
+            console.warn.apply(console, arguments);
+        }
     }
 
     /**
@@ -49,13 +62,28 @@ class Compiler
 
         setup(this);
 
+        this.log("Compiling template");
         this.template = new Template(string,null,this);
+        this.log("Compiling complete");
 
         return function(data) {
             var output = this.template.render(data);
+            this.log("Template rendered");
             return this.prettyPrint ? beautify(output, this.prettyPrintOptions) : output;
 
         }.bind(this);
+    }
+
+    /**
+     * Precompile string.
+     * @param string string
+     * @returns {*}
+     */
+    precompile(string)
+    {
+        this.template = new Template(string,null,this);
+
+        return `module.exports = function(data){ return ${this.template.source}; }`;
     }
 
     /**
