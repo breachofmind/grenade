@@ -17,14 +17,18 @@ class TagObject
         this.render = this.tag.render.bind(this);
 
         this.args = this.parse(match[3]);
+        this.source = "";
     }
 
     add()
     {
         this.index = this.template.output.length;
         this.template.output.push(this);
-        this.key = this.template.root.tags.length;
-        this.template.root.tags.push(this);
+
+        this.key = this.template.compiler.tags.length;
+        this.template.compiler.tags.push(this);
+
+        this.source = `this.tag(data,${this.key})`;
     }
 
     replaceWith(what)
@@ -34,7 +38,7 @@ class TagObject
 
     erase()
     {
-        return this.replaceWith("");
+        this.replaceWith(null);
     }
 }
 

@@ -1,14 +1,14 @@
 "use strict";
+var ok = require('assert').ok;
 var fs = require('fs');
 var path = require('path');
-var Template = require('./template');
 var beautify = require('js-beautify').html;
-var ok = require('assert').ok;
+var BaseTemplate = require('./template');
+var BaseTags = require('./tags');
 
-
-class TemplateFactory
+class Compiler
 {
-    constructor(tags)
+    constructor()
     {
         this.extension = "htm";
 
@@ -21,34 +21,9 @@ class TemplateFactory
             max_preserve_newlines:0
         };
 
-        tags(this);
-    }
-
-    /**
-     * Compile a string to a template function.
-     * @param string
-     * @returns {Template}
-     */
-    compile(string)
-    {
-        ok (typeof string == "string", "A string is required.");
-
-        var template = new Template(string,null);
-
-        var fn = function(data) {
-            var output = template.render(data);
-            return this.prettyPrint ? beautify(output, this.prettyPrintOpts) : output;
-
-        }.bind(this);
-
-        fn.template = template;
-
-        return fn;
-    }
-
-    precompile(string)
-    {
-        // Todo
+        this.template = null;
+        this.tags = [];
+        this.vars = [];
     }
 
     /**
@@ -59,6 +34,27 @@ class TemplateFactory
     filepath(filename)
     {
         return path.normalize(this.rootPath + filename + "." + this.extension);
+    }
+
+    /**
+     * Compile a string to a template function.
+     * @param string
+     * @returns {function}
+     */
+    compile(string)
+    {
+        ok (typeof string == "string", "A string is required.");
+
+        var Template = BaseTemplate(this);
+        var Tag = BaseTags(this,Template);
+
+        this.template = new Template(string,null);
+
+        return function(data) {
+            var output = this.template.render(data);
+            return this.prettyPrint ? beautify(output, this.prettyPrintOpts) : output;
+
+        }.bind(this);
     }
 
     /**
@@ -99,14 +95,14 @@ class TemplateFactory
      */
     get express()
     {
-        var factory = this;
+        var compiler = this;
         return function(filepath,options,done)
         {
-            return factory.load(filepath, function(err, template) {
+            return compiler.load(filepath, function(err, template) {
                 return done(err, template(options));
             })
         }
     }
 }
 
-module.exports = TemplateFactory;
+module.exports = Compiler;

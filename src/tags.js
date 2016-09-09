@@ -1,12 +1,12 @@
 var _ = require('lodash');
 var Tag = require('./tag');
-var Template = require('./template');
+var BaseTemplate = require('./template');
 
-module.exports = function(factory)
+module.exports = function(compiler, Template)
 {
     Tag.extend('extends', {
         evaluate: function() {
-            this.template.output[this.index] = new Template(factory.contents(this.args), this.template);
+            this.replaceWith(new Template(compiler.contents(this.args), this.template));
         }
     });
 
@@ -21,9 +21,9 @@ module.exports = function(factory)
         },
         evaluate: function() {
             this.erase();
+            this.source = this.scope.source;
         },
-        render: function(data)
-        {
+        render: function(data) {
             return this.scope.render(data);
         }
     });
@@ -40,7 +40,7 @@ module.exports = function(factory)
 
     Tag.extend('include', {
         evaluate: function() {
-            this.replaceWith(new Template(factory.contents(this.args), this.template));
+            this.replaceWith(new Template(compiler.contents(this.args), this.template));
         }
     });
 
@@ -123,6 +123,8 @@ module.exports = function(factory)
             return this.ifFalse ? this.ifFalse.render(data) : "";
         }
     });
+
+
     Tag.extend('unless', {
         block: true,
         parse: function(args) {
@@ -134,4 +136,5 @@ module.exports = function(factory)
         }
     });
 
+    return Tag;
 };

@@ -1,8 +1,6 @@
 "use strict";
 
 var utils = require('./utils');
-var Template = require('./template');
-
 var tags = {};
 
 /**

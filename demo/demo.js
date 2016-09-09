@@ -1,6 +1,6 @@
 "use strict";
 
-var factory = require('../index')();
+var grenade = require('../index');
 
 var data = {
     title: "Mike",
@@ -27,11 +27,11 @@ var data = {
 
 
 
-factory.rootPath = __dirname+"/views/";
-factory.extension = "htm";
-factory.prettyPrint = true;
+grenade.rootPath = __dirname+"/views/";
+grenade.extension = "htm";
+grenade.prettyPrint = false;
 
-factory.load(factory.filepath('content'), function(err,template) {
+grenade.load(grenade.filepath('content'), function(err,template) {
 
     var str = template(data);
 

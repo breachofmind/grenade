@@ -1,6 +1,5 @@
 "use strict";
 
-var Template = require('./template');
 var TagObject = require('./match');
 var utils = require('./utils');
 
@@ -9,19 +8,28 @@ class Walker
     constructor(template)
     {
         this.template = template;
-
-        Template = template.constructor;
     }
 
+    append(output)
+    {
+        this.template.output.push(output);
+    }
+
+    line(i)
+    {
+        return this.template.input[i];
+    }
     /**
      * Find vars in the given line.
-     * @param line
+     * @param i
      * @returns {*}
      */
-    vars(line)
+    vars(i)
     {
+        var line = this.line(i);
+
         if (! utils.RX_VAR.test(line)) {
-            return line;
+            return this.append(line);
         }
         var input = line.split(utils.RX_VARS);
         var output = [];
@@ -31,22 +39,16 @@ class Walker
                 continue;
             }
             if (segment.substr(0,2) !== "${") {
-                output.push(segment);
+                this.append(segment);
                 continue;
             }
             var args = utils.parseVar(segment.trim());
             if (args.mode == "#") continue;
 
-            output.push (args);
+            args.index = this.template.compiler.vars.length;
+            this.template.compiler.vars.push(args);
+            this.append(args);
         }
-
-        output.source = function()
-        {
-            return this.map(function(item) {
-                if (typeof item == 'string') return JSON.stringify(item);
-                return `this.prop(data, ${JSON.stringify(item)})`;
-            }).join(" + ");
-        };
 
         return output;
     }
@@ -58,7 +60,7 @@ class Walker
      */
     match(i)
     {
-        var line = this.template.input[i];
+        var line = this.line(i);
 
         // Not a valid line, or empty string.
         if (! line || !line.length) {
@@ -67,19 +69,19 @@ class Walker
         // This is not a template tag, just a string.
         // Add to the output.
         if (line[0] !== "@") {
-            this.template.output.push( this.vars(line) );
+            this.vars(i);
             return;
         }
         // We might be dealing with a template tag.
         // Is it an opening tag?
         var tagName = line.substr(1,line.indexOf('(')-1);
         if (! tagName) {
-            this.template.output.push( line ); // Could be @else statement.
+            this.append(line); // Could be @else statement.
             return;
         }
 
         // Only return the opening tag, which contains the args.
-        return new TagObject(utils.RX_TAG.exec(line),this.template);
+        return new TagObject(utils.RX_TAG.exec(line), this.template);
     }
 
     /**
@@ -90,12 +92,14 @@ class Walker
      */
     scope(match,i)
     {
+        var Template = this.template.constructor;
+
         var scope = [],
             endtag = "@end"+match.name;
 
         for (var n=i + 1, open = 1; n<this.template.input.length; n++)
         {
-            var line = this.template.input[n];
+            var line = this.line(n);
 
             // Not a string or empty string.
             if (!line || !line.length) {
@@ -110,12 +114,14 @@ class Walker
                 open --;
             }
 
-
             if (open == 0) {
                 match.add();
                 match.scope = new Template(scope,this.template);
                 return n; // skip ahead.
-            } else {scope.push(line);}
+
+            } else {
+                scope.push(line);
+            }
         }
     }
 
