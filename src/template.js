@@ -2,7 +2,8 @@
 
 var _     = require('lodash');
 var utils = require('./utils');
-var TagObject = require('./match');
+var MatchTag = require('./matchTag');
+var MatchVar = require('./matchVar');
 var walk = require('./walker');
 
 const RX_TAGS = /\s*?(\@.*[^\s+])/gm;
@@ -14,12 +15,18 @@ const RX_TAGS = /\s*?(\@.*[^\s+])/gm;
  */
 class Template
 {
+    /**
+     * Create a new template object.
+     * @param input string|array
+     * @param parent Template|null
+     * @param compiler Compiler|null
+     */
     constructor(input,parent,compiler)
     {
         this.input = Array.isArray(input) ? input : input.split(RX_TAGS);
+        this.output = [];
         this.parent = parent;
         this.compiler = compiler || this.parent.compiler;
-        this.output = [];
 
         walk(this);
 
@@ -38,11 +45,11 @@ class Template
             if (object instanceof Template) {
                 return object.source;
             }
-            if (object instanceof TagObject) {
+            if (object instanceof MatchTag) {
                 return object.name == 'section' ? object.scope.source : object.source;
             }
-            if (object.hasOwnProperty('property')) {
-                return `this.prop(data, ${object.index})`;
+            if (object instanceof MatchVar) {
+                return object.source;
             }
         });
 

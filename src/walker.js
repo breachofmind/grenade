@@ -1,16 +1,19 @@
 "use strict";
 
-var TagObject = require('./match');
+var MatchTag = require('./matchTag');
+var MatchVar = require('./matchVar');
 var utils = require('./utils');
 
 const RX_VARS = /(\$\{.*?\})/gm;
 const RX_VAR = /\$\{(.*?)\}/;
 const RX_TAG = /\@((\w+)\((.*)\)|(\w+))/;
 
+/**
+ * Walks through the template and parses the contents.
+ * @param template Template
+ */
 function walk(template)
 {
-    var compiler = template.compiler;
-
     /**
      * Walk the template input array.
      * @returns {Array}
@@ -34,7 +37,7 @@ function walk(template)
     }
 
     template.output.map(function(object) {
-        if (object instanceof TagObject) object.evaluate();
+        if (object instanceof MatchTag) object.evaluate();
     });
 
 
@@ -56,7 +59,6 @@ function walk(template)
             return append(line);
         }
         var input = line.split(RX_VARS);
-        var output = [];
 
         for (var i=0; i<input.length; i++)
         {
@@ -75,10 +77,7 @@ function walk(template)
             }
 
             // This is a variable.
-            var args = utils.parseVar(segment.trim());
-            args.index = compiler.vars.length;
-            compiler.vars.push(args);
-            append(args);
+            new MatchVar(segment.trim(), template).add();
         }
     }
 
@@ -110,7 +109,7 @@ function walk(template)
         }
 
         // Only return the opening tag, which contains the args.
-        return new TagObject(RX_TAG.exec(line), template);
+        return new MatchTag(RX_TAG.exec(line), template);
     }
 
 

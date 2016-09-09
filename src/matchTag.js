@@ -2,7 +2,7 @@
 
 var Tag = require('./tag');
 
-class TagObject
+class MatchTag
 {
     constructor(match,template)
     {
@@ -42,4 +42,4 @@ class TagObject
     }
 }
 
-module.exports = TagObject;
+module.exports = MatchTag;

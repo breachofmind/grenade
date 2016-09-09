@@ -28,7 +28,10 @@ var data = {
 var opts = {
     rootPath: __dirname+"/views/",
     extension: 'htm',
-    prettyPrint: false,
+    prettyPrint: true,
+    prettyPrintOptions: {
+
+    }
 };
 
 grenade.load('content', opts, function(err,template) {

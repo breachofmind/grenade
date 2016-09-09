@@ -18,6 +18,11 @@ class Compiler
 
         this.prettyPrint = opts.prettyPrint || false;
 
+        this.prettyPrintOptions = opts.prettyPrintOptions || {
+                index:2,
+                max_preserve_newlines: 0
+            };
+
         this.template = null;
         this.tags = [];
         this.vars = [];
@@ -48,7 +53,7 @@ class Compiler
 
         return function(data) {
             var output = this.template.render(data);
-            return this.prettyPrint ? beautify(output, this.prettyPrint) : output;
+            return this.prettyPrint ? beautify(output, this.prettyPrintOptions) : output;
 
         }.bind(this);
     }
