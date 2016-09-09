@@ -31,7 +31,7 @@ var data = {
 var opts = {
     rootPath: __dirname+"/views/",
     extension: 'htm',
-    //prettyPrint: true,
+    prettyPrint: true,
     debug: true,
 };
 

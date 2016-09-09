@@ -45,7 +45,6 @@ class MatchVar
         // Remove the outer braces.
         property = property.replace("${", "");
         property = property.substr(0, property.length-1);
-        this.text = property;
 
         // Check the evaluation mode.
         var chr = property[0];
@@ -53,6 +52,7 @@ class MatchVar
         if (this.mode) {
             property = property.replace(this.mode,"");
         }
+        this.text = property;
 
         // Get the filter functions.
         var filters = property.split(" | ",2);
