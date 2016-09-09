@@ -60,18 +60,19 @@ class Compiler
     {
         ok (typeof string == "string", "A string is required.");
 
-        setup(this);
+        var compiler = this;
+
+        setup(compiler);
 
         this.log("Compiling template");
         this.template = new Template(string,null,this);
         this.log("Compiling complete");
 
         return function(data) {
-            var output = this.template.render(data);
-            this.log("Template rendered");
-            return this.prettyPrint ? beautify(output, this.prettyPrintOptions) : output;
-
-        }.bind(this);
+            var output = compiler.template.render(data);
+            compiler.log("Template rendered");
+            return compiler.prettyPrint ? beautify(output, compiler.prettyPrintOptions) : output;
+        };
     }
 
     /**

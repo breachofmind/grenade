@@ -62,20 +62,20 @@ module.exports = function(compiler)
         },
 
         render: function(data) {
-            var out = [];
+            var out = "";
             var array = this.template.value(data, this.args.array) || [];
 
-            array.forEach(function(object, i) {
-                var copy = {
-                    $parent: _.clone(data)
-                };
-                copy[this.args.key] = object;
-                if (this.args.index) copy[this.args.index] = i;
+            var $parent = _.clone(data);
+            for (var i= 0, len=array.length; i<len; i++) {
+                    var copy = {
+                        $parent: $parent
+                    };
+                    copy[this.args.key] = array[i];
+                    if (this.args.index) copy[this.args.index] = i;
 
-                out.push(this.scope.render(copy));
-            }.bind(this));
-
-            return out.join("");
+                    out += this.scope.render(copy);
+            }
+            return out;
         }
     });
 

@@ -31,8 +31,18 @@ class Template
         walk(this);
 
         this.source = this.generateSource();
+
+        this.fn = new Function('data,rethrow', `
+            var __out = "";
+            try { __out = ${this.source == "" ? "''" : this.source}; } catch(e) { __out = rethrow(e); }
+            return __out;;
+        `);
     }
 
+    /**
+     * Get the template level depth.
+     * @returns {number}
+     */
     get level()
     {
         var parent = this.parent,
@@ -50,24 +60,24 @@ class Template
      */
     generateSource()
     {
-        var source = this.output.map(function(object) {
+        var source = [];
+        for(var i=0; i<this.output.length; i++)
+        {
+            var object = this.output[i];
+
             if (!object) {
                 object = "";
             }
             if (typeof object == 'string') {
-                return JSON.stringify(object);
+                source.push ( JSON.stringify(object) ); continue;
             }
-            if (object instanceof Template) {
-                return object.source;
+            if (object instanceof Template || object instanceof MatchVar) {
+                source.push ( object.source ); continue;
             }
             if (object instanceof MatchTag) {
-                return object.name == 'section' ? object.scope.source : object.source;
+                source.push ( object.name == 'section' ? object.scope.source : object.source );
             }
-            if (object instanceof MatchVar) {
-                return object.source;
-            }
-        });
-
+        }
         return source.join(" + ");
     }
 
@@ -123,17 +133,7 @@ class Template
      */
     render(data)
     {
-        if (! this.source || this.source == "") {
-            return "";
-        }
-        var src = `
-        var __out = "";
-        try { __out = ${this.source}; } catch(e) { __out = rethrow(e); }
-        return __out;
-        `;
-        var fn = new Function('data, rethrow', src);
-
-        return fn.apply(this,[data,rethrow]);
+        return this.fn(data,rethrow);
     }
 
     /**

@@ -14,6 +14,8 @@ const RX_TAG = /\@((\w+)\((.*)\)|(\w+))/;
  */
 function walk(template)
 {
+    var Template = require('./template');
+
     /**
      * Walk the template input array.
      * @returns {Array}
@@ -36,9 +38,9 @@ function walk(template)
         i = scope(match,i);
     }
 
-    template.output.map(function(object) {
-        if (object instanceof MatchTag) object.evaluate();
-    });
+    for (var i=0; i< template.output.length; i++) {
+        if (template.output[i] instanceof MatchTag) template.output[i].evaluate();
+    }
 
 
     function append(output) {
@@ -89,7 +91,10 @@ function walk(template)
     function tag(index)
     {
         var line = template.input[index];
-
+        if (line instanceof MatchTag || line instanceof MatchVar || line instanceof Template) {
+            append(line);
+            return;
+        }
         // Not a valid line, or empty string.
         if (! line || !line.length) {
             return;

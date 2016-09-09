@@ -37,16 +37,12 @@ module.exports = {
 
     /**
      * Alias to compiler function.
-     * @param opts object
      * @param string
+     * @param opts object
      * @returns {Function}
      */
-    compile: function(opts,string)
+    compile: function(string,opts)
     {
-        if (arguments.length == 1) {
-            string = arguments[0];
-            opts = {};
-        }
         var compiler = new Compiler(opts);
 
         return compiler.compile(string);
@@ -54,16 +50,12 @@ module.exports = {
 
     /**
      * Alias to precompiler.
-     * @param opts
      * @param string
+     * @param opts object
      * @returns {Function}
      */
-    precompile: function(opts,string)
+    precompile: function(string,opts)
     {
-        if (arguments.length == 1) {
-            string = arguments[0];
-            opts = {};
-        }
         var compiler = new Compiler(opts);
 
         return compiler.precompile(string);

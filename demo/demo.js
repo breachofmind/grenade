@@ -12,6 +12,9 @@ var data = {
     footer: {
         title: "Footer Title!"
     },
+    colors: [
+        "red", "green", "blue"
+    ],
     hash: {
         item1: "Hash 1",
         item2: "Hash 2",
@@ -28,7 +31,7 @@ var data = {
 var opts = {
     rootPath: __dirname+"/views/",
     extension: 'htm',
-    prettyPrint: true,
+    //prettyPrint: true,
     debug: true,
 };
 
