@@ -7,13 +7,13 @@ We don't. I just happen to have a lot of requirements for my template libraries 
 
 This was designed to work with the server and supports a number of features:
 
-- Natively supports Layouts, using the @extends('file') syntax.
+- Natively supports Layouts..
 - Escaped, unescaped, and comment variables.
 - Make Function calls like you can with EJS.
 - Ability to extend with custom tags.
 - Plugs into Express easily.
 - Easy to write and read, unobtrusive syntax.
-- Scoping of data structures, like Angular. (ie. @foreach((i,item) in items))
+- Scoping of data structures, like Angular. (ie. `@foreach((i,item) in items)`)
 - Ability to precompile templates, like handlebars or EJS.
 - Can work with Angular or other handlebars templaters on the client, since this library doesn't use handlebars delimiters.
 
@@ -117,6 +117,36 @@ Grenade allows you to call functions from your data object, like EJS. They have 
 
 `${testing(arg1,arg2,"string")}`
 
+### Control structures
+
+Grenade comes with some basic structures. More are on the way.
+
+#### If/Else
+
+```html
+@if(condition)
+    <h1>It's true.</h1>
+@else
+    <h1>It's false.</h1>
+@endif
+```
+
+#### foreach
+
+```html
+<ul>
+@foreach(item in items)
+    <li>${item}</li>
+@endforeach
+</ul>
+
+<ul>
+@foreach((index,item) in items)
+    <li>#${index} : ${item}</li>
+@endforeach
+</ul>
+```
+
 ## Creating Custom Tags
 
 Custom tags look like `@tagname(args)`. You can add your own to create custom UI components or control structures.
@@ -125,17 +155,12 @@ Custom tags look like `@tagname(args)`. You can add your own to create custom UI
 var grenade = require('grenade');
 
 // This special tag will only display it's enclosed scope if a user has the given role.
-// In the markup, the tag will look like:
-// @role(rolename)
-// ... show if the user has the role
-// @endrole
-//
 grenade.Tag.extend('role', {
     // Declare this tag as a block, which means it contains a scope and a @endrole tag.
     block: true,
     
     // Parse the tag's arguments.
-    // They were passed a string, so we'll leave them alone.
+    // They were passed as a string, so we'll leave them alone.
     parse: function(args) {
         return args;
     },
@@ -152,6 +177,13 @@ grenade.Tag.extend('role', {
 })
 ```
 
+And so our markup can be:
+
+```html
+@role(superuser)
+<marquee>My user's role is a superuser!</marquee>
+@endrole
+```
 
 ## Testing
 
