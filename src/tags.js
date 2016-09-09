@@ -1,8 +1,8 @@
 var _ = require('lodash');
 var Tag = require('./tag');
-var BaseTemplate = require('./template');
+var Template = require('./template');
 
-module.exports = function(compiler, Template)
+module.exports = function(compiler)
 {
     Tag.extend('extends', {
         evaluate: function() {
@@ -135,6 +135,4 @@ module.exports = function(compiler, Template)
             //template.output[tag.start] = tag;
         }
     });
-
-    return Tag;
 };

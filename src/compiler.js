@@ -3,23 +3,20 @@ var ok = require('assert').ok;
 var fs = require('fs');
 var path = require('path');
 var beautify = require('js-beautify').html;
-var BaseTemplate = require('./template');
-var BaseTags = require('./tags');
+var Template = require('./template');
+var setup = require('./tags');
 
 class Compiler
 {
-    constructor()
+    constructor(opts)
     {
-        this.extension = "htm";
+        opts = opts || {};
 
-        this.rootPath = "./";
+        this.extension = opts.extension || "htm";
 
-        this.prettyPrint = false;
+        this.rootPath = opts.rootPath || "./";
 
-        this.prettyPrintOpts = {
-            indent_size:2,
-            max_preserve_newlines:0
-        };
+        this.prettyPrint = opts.prettyPrint || false;
 
         this.template = null;
         this.tags = [];
@@ -45,33 +42,15 @@ class Compiler
     {
         ok (typeof string == "string", "A string is required.");
 
-        var Template = BaseTemplate(this);
-        var Tag = BaseTags(this,Template);
+        setup(this);
 
-        this.template = new Template(string,null);
+        this.template = new Template(string,null,this);
 
         return function(data) {
             var output = this.template.render(data);
-            return this.prettyPrint ? beautify(output, this.prettyPrintOpts) : output;
+            return this.prettyPrint ? beautify(output, this.prettyPrint) : output;
 
         }.bind(this);
-    }
-
-    /**
-     * Load a new file.
-     * @param filename string
-     * @param done function
-     */
-    load(filename,done)
-    {
-        fs.readFile(filename, function(err,contents) {
-            if (err) {
-                return done(new Error(err), null);
-            }
-
-            return done(null, this.compile(contents.toString()))
-
-        }.bind(this))
     }
 
     /**
@@ -89,16 +68,40 @@ class Compiler
         return fs.readFileSync(filepath, {encoding:"utf8"});
     }
 
+
     /**
-     * Get the express engine function.
+     * Load a new file.
+     * @param filename string
+     * @param opts object
+     * @param done function
+     */
+    static load(filename,opts,done)
+    {
+        var compiler = new Compiler(opts);
+
+        if (! opts.express) {
+            filename = compiler.filepath(filename);
+        }
+        fs.readFile(filename, function(err,contents) {
+            if (err) {
+                return done(new Error(err), null);
+            }
+            return done(null, compiler.compile(contents.toString()))
+
+        }.bind(this))
+    }
+
+    /**
+     * Generate a function for the express engine.
+     * @param opts object
      * @returns {Function}
      */
-    get express()
+    static express(opts)
     {
-        var compiler = this;
+        opts.express = true;
         return function(filepath,options,done)
         {
-            return compiler.load(filepath, function(err, template) {
+            return Compiler.load(filepath, opts, function(err, template) {
                 return done(err, template(options));
             })
         }

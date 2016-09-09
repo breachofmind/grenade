@@ -3,64 +3,93 @@
 var TagObject = require('./match');
 var utils = require('./utils');
 
-class Walker
+const RX_VARS = /(\$\{.*?\})/gm;
+const RX_VAR = /\$\{(.*?)\}/;
+const RX_TAG = /\@((\w+)\((.*)\)|(\w+))/;
+
+function walk(template)
 {
-    constructor(template)
-    {
-        this.template = template;
-    }
+    var compiler = template.compiler;
 
-    append(output)
-    {
-        this.template.output.push(output);
-    }
-
-    line(i)
-    {
-        return this.template.input[i];
-    }
     /**
-     * Find vars in the given line.
-     * @param i
+     * Walk the template input array.
+     * @returns {Array}
+     */
+    for(let i = 0; i < template.input.length; i++)
+    {
+        var match = tag(i);
+
+        if (! match) continue;
+
+        // This is not a tag block.
+        // Add it to the template output.
+        if (! match.tag.block) {
+            match.add();
+            continue;
+        }
+
+        // This is a tag block.
+        // Find the scope and advance the pointer.
+        i = scope(match,i);
+    }
+
+    template.output.map(function(object) {
+        if (object instanceof TagObject) object.evaluate();
+    });
+
+
+    function append(output) {
+        template.output.push(output);
+    }
+
+    /**
+     * For a given line, discover any variables.
+     * @param index number
      * @returns {*}
      */
-    vars(i)
+    function vars(index)
     {
-        var line = this.line(i);
+        var line = template.input[index];
 
-        if (! utils.RX_VAR.test(line)) {
-            return this.append(line);
+        // If there are no vars on this line, skip it.
+        if (! RX_VAR.test(line)) {
+            return append(line);
         }
-        var input = line.split(utils.RX_VARS);
+        var input = line.split(RX_VARS);
         var output = [];
-        for (var i=0; i<input.length; i++) {
+
+        for (var i=0; i<input.length; i++)
+        {
             var segment = input[i];
             if (! segment || ! segment.length) {
                 continue;
             }
+            // This is a string, not a variable.
             if (segment.substr(0,2) !== "${") {
-                this.append(segment);
+                append(segment);
                 continue;
             }
+            // This is a comment.
+            if (segment.substr(0,3) == "${#") {
+                continue;
+            }
+
+            // This is a variable.
             var args = utils.parseVar(segment.trim());
-            if (args.mode == "#") continue;
-
-            args.index = this.template.compiler.vars.length;
-            this.template.compiler.vars.push(args);
-            this.append(args);
+            args.index = compiler.vars.length;
+            compiler.vars.push(args);
+            append(args);
         }
-
-        return output;
     }
 
     /**
      * Find a tag match or append the output string.
-     * @param i number
+     * @param index number
      * @returns {*}
      */
-    match(i)
+    function tag(index)
     {
-        var line = this.line(i);
+        var line = template.input[index];
 
         // Not a valid line, or empty string.
         if (! line || !line.length) {
@@ -69,37 +98,38 @@ class Walker
         // This is not a template tag, just a string.
         // Add to the output.
         if (line[0] !== "@") {
-            this.vars(i);
+            vars(index);
             return;
         }
         // We might be dealing with a template tag.
         // Is it an opening tag?
         var tagName = line.substr(1,line.indexOf('(')-1);
         if (! tagName) {
-            this.append(line); // Could be @else statement.
+            append(line); // Could be @else statement.
             return;
         }
 
         // Only return the opening tag, which contains the args.
-        return new TagObject(utils.RX_TAG.exec(line), this.template);
+        return new TagObject(RX_TAG.exec(line), template);
     }
+
 
     /**
      * Given a TagObject and index, set the tag's block scope.
      * @param match TagObject
-     * @param i number index
+     * @param index number
      * @returns {*}
      */
-    scope(match,i)
+    function scope(match,index)
     {
-        var Template = this.template.constructor;
+        var Template = template.constructor;
 
         var scope = [],
             endtag = "@end"+match.name;
 
-        for (var n=i + 1, open = 1; n<this.template.input.length; n++)
+        for (var i = index + 1, open = 1; i < template.input.length; i++)
         {
-            var line = this.line(n);
+            var line = template.input[i];
 
             // Not a string or empty string.
             if (!line || !line.length) {
@@ -116,41 +146,15 @@ class Walker
 
             if (open == 0) {
                 match.add();
-                match.scope = new Template(scope,this.template);
-                return n; // skip ahead.
+                match.scope = new Template(scope,template);
+                return i; // skip ahead.
 
             } else {
                 scope.push(line);
             }
         }
     }
-
-    /**
-     * Walk the template input array.
-     * @returns {Array}
-     */
-    walk()
-    {
-        for(var i=0; i<this.template.input.length; i++)
-        {
-            var match = this.match(i);
-
-            if (! match) continue;
-
-            // This is not a tag block.
-            // Add it to the template output.
-            if (! match.tag.block) {
-                match.add();
-                continue;
-            }
-
-            // This is a tag block.
-            // Find the scope and advance the pointer.
-            i = this.scope(match,i);
-        }
-
-        return this.template.output;
-    }
 }
 
-module.exports = Walker;
+
+module.exports = walk;

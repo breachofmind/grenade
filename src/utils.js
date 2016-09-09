@@ -2,11 +2,6 @@
 
 module.exports = {
 
-    RX_VARS: /(\$\{.*?\})/gm,
-    RX_VAR: /\$\{(.*?)\}/,
-    RX_TAGS: /\s*?(\@.*[^\s+])/gm,
-    RX_TAG: /\@((\w+)\((.*)\)|(\w+))/,
-
     MODE_RAW: "=",
     MODE_COMMENT: "#",
 

@@ -1,6 +1,6 @@
 "use strict";
 
-var grenade = require('../index');
+var grenade = require('../index').Compiler;
 
 var data = {
     title: "Mike",
@@ -25,14 +25,15 @@ var data = {
     ]
 };
 
+var opts = {
+    rootPath: __dirname+"/views/",
+    extension: 'htm',
+    prettyPrint: false,
+};
 
+grenade.load('content', opts, function(err,template) {
 
-grenade.rootPath = __dirname+"/views/";
-grenade.extension = "htm";
-grenade.prettyPrint = false;
-
-grenade.load(grenade.filepath('content'), function(err,template) {
-
+    if (err) throw err;
     var str = template(data);
 
     console.log(str);
