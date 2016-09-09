@@ -121,7 +121,7 @@ Grenade allows you to call functions from your data object, like EJS. They have 
 
 Grenade comes with some basic structures. More are on the way.
 
-#### If/Else
+#### if/else
 
 ```html
 @if(condition)
@@ -145,6 +145,12 @@ Grenade comes with some basic structures. More are on the way.
     <li>#${index} : ${item}</li>
 @endforeach
 </ul>
+```
+
+#### include
+
+```html
+@include("file/name")
 ```
 
 ## Creating Custom Tags
