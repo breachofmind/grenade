@@ -75,7 +75,7 @@ class Template
                 source.push ( object.source ); continue;
             }
             if (object instanceof MatchTag) {
-                source.push ( object.name == 'section' ? object.scope.source : object.source );
+                source.push( object.source );
             }
         }
         return source.join(" + ");
@@ -133,7 +133,7 @@ class Template
      */
     render(data)
     {
-        return this.fn(data,rethrow);
+        return this.fn(data,rethrow).trim();
     }
 
     /**

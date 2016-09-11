@@ -46,6 +46,7 @@ var opts = {
 };
 
 // This will load and compile the file "./views/content.htm";
+
 grenade.load('content', opts, function(err,template) {
 
     if (err) throw err;
@@ -64,9 +65,11 @@ var app = express();
 
 // "nade" is the extension, so feel free to use something 
 // like "htm" if your IDE doesn't support custom file types.
+// Be sure to specify your views path, since grenade does not use relative paths.
+
 app.engine('nade', grenade.Compiler.express({
-    rootPath: 'views' // grenade uses a root path to find views instead of a relative path. Be sure to set it here.
-    extension: 'nade' // File extension.
+    rootPath: 'views'
+    extension: 'nade'
 });
 ```
 
@@ -76,7 +79,7 @@ app.engine('nade', grenade.Compiler.express({
 Let's make a simple template that is based on a parent layout.
 
 ```html
-./views/index.nade
+<!-- ./views/index.nade -->
 @extends("layouts/master")
 
 @section("head")
@@ -90,7 +93,7 @@ Let's make a simple template that is based on a parent layout.
 ```
 
 ```html
-./views/layouts/master.nade
+<!-- ./views/layouts/master.nade -->
 <!DOCTYPE html>
 <html>
     <head>
@@ -123,6 +126,8 @@ Grenade comes with some basic structures. More are on the way.
 
 #### if/else
 
+Display the contents of the block if the expression is truthy.
+
 ```html
 @if(condition)
     <h1>It's true.</h1>
@@ -131,7 +136,22 @@ Grenade comes with some basic structures. More are on the way.
 @endif
 ```
 
+#### unless/else
+
+Displays the contents of the block if the expression is falsey.
+
+```html
+@if(condition)
+    <h1>It's false.</h1>
+@else
+    <h1>It's true.</h1>
+@endif
+```
+
+
 #### foreach
+
+Loop through the given data array.
 
 ```html
 <ul>
@@ -142,12 +162,14 @@ Grenade comes with some basic structures. More are on the way.
 
 <ul>
 @foreach((index,item) in items)
-    <li>#${index} : ${item}</li>
+    <li>${index} : ${item}</li>
 @endforeach
 </ul>
 ```
 
 #### include
+
+Include a file at the given location.
 
 ```html
 @include("file/name")
@@ -161,23 +183,36 @@ Custom tags look like `@tagname(args)`. You can add your own to create custom UI
 var grenade = require('grenade');
 
 // This special tag will only display it's enclosed scope if a user has the given role.
+
 grenade.Tag.extend('role', {
-    // Declare this tag as a block, which means it contains a scope and a @endrole tag.
+
+    // Declare this tag as a block, 
+    // which means it contains a scope and a @endrole tag.
+    
     block: true,
     
     // Parse the tag's arguments.
     // They were passed as a string, so we'll leave them alone.
+    
     parse: function(args) {
         return args;
     },
     
-    // Function that will be called when the template is rendered with data.
+    // Function that will be called 
+    // when the template is rendered with data.
+    
     render(data) {
-        // If the user has the role, show the containing scope.
+    
+        // If the user has the role, 
+        // show the containing scope.
+        
         if (data.user && data.user.role == this.args) {
             return this.scope.render(data);
         }
-        // Oh no. Didn't meet our criteria, so return empty string.
+        
+        // Oh no. Didn't meet our criteria, 
+        // so return empty string.
+        
         return "";
     }
 })
@@ -187,7 +222,7 @@ And so our markup can be:
 
 ```html
 @role(superuser)
-<marquee>My user's role is a superuser!</marquee>
+    <marquee>My user's role is a superuser!</marquee>
 @endrole
 ```
 

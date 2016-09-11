@@ -11,6 +11,22 @@ var compiler = new grenade.Compiler({
     rootPath: demopath
 });
 
+var o = {
+    test:"output",
+    html:"<p>output</p>",
+    comment:"comment",
+    arr:['red','green','blue'],
+    zero:0,
+    one:1,
+    func: function() {
+        return "called"
+    },
+    args: function(arg1,arg2)
+    {
+        return args1 + arg2;
+    }
+};
+
 describe('configuration', function()
 {
     it('should be an object', function(){
@@ -45,12 +61,6 @@ describe('basic strings', function()
 
 describe('variables', function()
 {
-    var o = {
-        test:"output",
-        html:"<p>output</p>",
-        comment:"comment"
-    };
-
     var tVarEscaped = grenade.compile("${test}");
     var tVarRaw = grenade.compile("${=test}");
     var tHtmlEscaped = grenade.compile("${html}");
@@ -58,6 +68,7 @@ describe('variables', function()
     var tComment1 = grenade.compile("${#comment}");
     var tComment2 = grenade.compile("${#comment is a long string, with commas and stuff}");
     var t2Vars = grenade.compile("${test}${comment}");
+    var t3 = grenade.compile("${zero}${one}");
 
     it('should resolve escaped variable, non-html', function(){
         expect(tVarEscaped(o)).to.equal(o.test);
@@ -75,6 +86,68 @@ describe('variables', function()
     it('should resolve comment as empty string', function(){
         expect(tComment1(o)).to.equal("");
         expect(tComment2(o)).to.equal("");
+    });
+    it('should return numbers as a string, including zero', function(){
+        expect(t3(o)).to.equal("01");
     })
+});
 
+describe('if/else', function()
+{
+    function src(v)
+    {
+        return `
+        @if(${v})
+        yes
+        @endif
+        `;
+    }
+
+    function ifelse(v)
+    {
+        return `
+        @if(${v})
+        yes
+        @else
+        no
+        @endif
+        `
+    }
+    var t0 = grenade.compile(src('true'));
+    var t02 = grenade.compile(src('1 == 1'));
+    var t1 = grenade.compile(src('false'));
+    var t12 = grenade.compile(src('2 == 1'));
+    var t2 = grenade.compile(ifelse('true'));
+    var t3 = grenade.compile(ifelse('false'));
+
+    it('should return the element if expression is true', function(){
+        expect(t0({})).to.equal("yes");
+        expect(t02(o)).to.equal("yes");
+    });
+    it('should not return the element if expression is false', function(){
+        expect(t1({})).to.equal("");
+        expect(t12(o)).to.equal("");
+    });
+    it('should return true portion of if/else if true', function(){
+        expect(t2({})).to.equal("yes");
+    });
+    it('should return false portion of if/else if false', function(){
+        expect(t3({})).to.equal("no");
+    });
+});
+
+describe('foreach', function()
+{
+    var t0 = grenade.compile(`
+        @foreach(item in arr)
+        \${item}
+        @endforeach
+    `);
+    it('should return nothing if empty array given', function(){
+        expect(t0({})).to.equal("");
+        expect(t0({arr:[]})).to.equal("");
+    });
+    it('should return each value if array given', function(){
+        expect(t0(o)).to.equal("redgreenblue");
+    });
 });

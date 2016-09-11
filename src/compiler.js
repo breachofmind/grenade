@@ -4,7 +4,6 @@ var fs = require('fs');
 var path = require('path');
 var beautify = require('js-beautify').html;
 var Template = require('./template');
-var setup = require('./tags');
 
 class Compiler
 {
@@ -61,8 +60,6 @@ class Compiler
         ok (typeof string == "string", "A string is required.");
 
         var compiler = this;
-
-        setup(compiler);
 
         this.log("Compiling template");
         this.template = new Template(string,null,this);

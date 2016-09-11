@@ -2,6 +2,13 @@ var Compiler = require('./src/compiler');
 var Template = require('./src/template');
 var Tag      = require('./src/tag');
 
+require('./src/tags/extends');
+require('./src/tags/foreach');
+require('./src/tags/if');
+require('./src/tags/include');
+require('./src/tags/section');
+require('./src/tags/unless');
+require('./src/tags/yield');
 
 module.exports = {
 
