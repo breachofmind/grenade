@@ -26,7 +26,7 @@
     <ul>
     @foreach(item in items)
 
-        <li>
+        <li class="@show(first:item.id==1, second:item.id==2)">
             ${item.name}
 
             @foreach((i,person) in item.people)

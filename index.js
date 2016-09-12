@@ -10,6 +10,7 @@ require('./src/tags/include');
 require('./src/tags/section');
 require('./src/tags/unless');
 require('./src/tags/yield');
+require('./src/tags/show');
 
 module.exports = {
 

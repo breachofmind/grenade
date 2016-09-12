@@ -7,7 +7,8 @@ var MatchVar = require('./matchVar');
 var Filter = require('./filter');
 var walk = require('./walker');
 
-const RX_TAGS = /\s*?(\@.*[^\s+])/gm;
+//const RX_TAGS = /\s*?(\@.*[^\s+])/gm;
+const RX_TAGS = /(\@\w+\(.*\)|\@\w+)/gm;
 
 /**
  * The template class.
