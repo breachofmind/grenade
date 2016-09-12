@@ -175,6 +175,15 @@ Include a file at the given location.
 @include("file/name")
 ```
 
+#### show
+
+Shows the given strings if the expressions are truthy. Useful for creating classes.
+
+```html
+<li class="@show(first: i==0, last: $parent.items.length == i)">Item</li>
+```
+
+
 ## Filters
 
 Filters are used in much the same way as Angular. They can be defined like so:
