@@ -62,5 +62,21 @@ module.exports = {
     precompile: function(string,opts)
     {
         return new Compiler(opts).precompile(string);
+    },
+
+    /**
+     * Return an engine function for express.
+     * @param opts object
+     * @returns {Function}
+     */
+    express: function(opts)
+    {
+        var compiler = new Compiler(opts);
+        return function(filepath,options,done)
+        {
+            return compiler.load(filepath, function(err, template) {
+                return done(err, template(options));
+            })
+        }
     }
 };

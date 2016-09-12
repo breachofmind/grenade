@@ -185,21 +185,6 @@ class Compiler
 
         }.bind(this))
     }
-
-    /**
-     * Generate a function for the express engine.
-     * @returns {Function}
-     */
-    express()
-    {
-        var compiler = this;
-        return function(filepath,options,done)
-        {
-            return compiler.load(filepath, function(err, template) {
-                return done(err, template(options));
-            })
-        }
-    }
 }
 
 module.exports = Compiler;

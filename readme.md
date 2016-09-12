@@ -67,10 +67,10 @@ var app = express();
 // like "htm" if your IDE doesn't support custom file types.
 // Be sure to specify your views path, since grenade does not use relative paths.
 
-app.engine('nade', grenade.Compiler.express({
-    rootPath: 'views'
+app.engine('nade', grenade.express({
+    rootPath: 'views',
     extension: 'nade'
-});
+}));
 ```
 
 
