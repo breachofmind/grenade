@@ -45,8 +45,6 @@ class MatchTag
     {
         if (! this.evaluated) {
             this.evaluated = true;
-            this.template.compiler.log("Evaluating tag: %s [%s]",this.name,this.template.level);
-
             return this.tag.evaluate.call(this);
         }
     }

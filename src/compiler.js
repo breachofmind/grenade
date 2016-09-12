@@ -5,6 +5,7 @@ var path = require('path');
 var beautify = require('js-beautify').html;
 var Template = require('./template');
 
+
 class Compiler
 {
     constructor(opts)
@@ -21,12 +22,15 @@ class Compiler
 
         this.prettyPrint = opts.prettyPrint || false;
 
+        this.isExpress = opts.express || false;
+
         this.prettyPrintOptions = opts.prettyPrintOptions || {
                 index:2,
                 max_preserve_newlines: 0
             };
 
-        this.template = null;
+        // Index of objects.
+        this.cache = {};
         this.tags = [];
         this.vars = [];
     }
@@ -53,35 +57,61 @@ class Compiler
     /**
      * Compile a string to a template function.
      * @param string
-     * @returns {function}
+     * @param parent Template
+     * @returns {Function}
      */
-    compile(string)
+    compile(string,parent)
     {
         ok (typeof string == "string", "A string is required.");
 
-        var compiler = this;
-
-        this.log("Compiling template");
-        this.template = new Template(string,null,this);
-        this.log("Compiling complete");
-
-        return function(data) {
-            var output = compiler.template.render(data);
-            compiler.log("Template rendered");
-            return compiler.prettyPrint ? beautify(output, compiler.prettyPrintOptions) : output;
-        };
+        return this.renderer( this.template(string,parent) );
     }
 
     /**
-     * Precompile string.
+     * Create a template from a string.
+     * @param string
+     * @param parent Template
+     * @returns {Template}
+     */
+    template(string,parent)
+    {
+        ok (typeof string == "string", "A string is required.");
+
+        this.log("Compiling template");
+
+        var template = new Template(string, parent||null, this);
+
+        this.log("Compiling complete");
+
+        return template;
+    }
+
+    /**
+     * Create a rendering function.
+     * @param template Template
+     * @returns {Function}
+     */
+    renderer(template)
+    {
+        var compiler = this;
+
+        return function(data) {
+            var output = template.render(data);
+            compiler.log("Template rendered");
+            return compiler.prettyPrint ? beautify(output, compiler.prettyPrintOptions) : output;
+        }
+    }
+
+    /**
+     * Precompile string. TODO
      * @param string string
      * @returns {*}
      */
     precompile(string)
     {
-        this.template = new Template(string,null,this);
+        var template = this.template(string,null);
 
-        return `module.exports = function(data){ return ${this.template.source}; }`;
+        return `module.exports = function(data){ return ${template.source}; }`;
     }
 
     /**
@@ -99,40 +129,73 @@ class Compiler
         return fs.readFileSync(filepath, {encoding:"utf8"});
     }
 
+    /**
+     * Make a template out of the given file name and parent Template.
+     * Useful for calling from a tag.
+     * @param filename string
+     * @param parent Template
+     * @returns {*}
+     */
+    make(filename, parent)
+    {
+        var filepath = this.filepath(filename);
+
+        if (this.cache[filepath]) {
+            this.log('Using cached: %s', filepath);
+            return this.cache[filepath].clone(parent);
+        }
+        if (! fs.existsSync(filepath)) {
+            throw new Error('File does not exist');
+        }
+        var template = this.template(fs.readFileSync(filepath, {encoding:"utf8"}), parent);
+
+        this.cache[filepath] = template;
+
+        return template;
+    }
+
 
     /**
      * Load a new file.
      * @param filename string
-     * @param opts object
      * @param done function
      */
-    static load(filename,opts,done)
+    load(filename,done)
     {
-        var compiler = new Compiler(opts);
-
-        if (! opts.express) {
-            filename = compiler.filepath(filename);
+        if (! this.isExpress) {
+            filename = this.filepath(filename);
         }
+
+        // Check if the template is in the cache already.
+        if (this.cache[filename]) {
+            this.log('Using cached: %s', filename);
+            return done(null, this.renderer(cache[filename]));
+        }
+
         fs.readFile(filename, function(err,contents) {
             if (err) {
                 return done(new Error(err), null);
             }
-            return done(null, compiler.compile(contents.toString()))
+            // Create a new template and cache it.
+            var template = this.template(contents.toString());
+
+            this.cache[filename] = template;
+
+            return done(null, this.renderer(template));
 
         }.bind(this))
     }
 
     /**
      * Generate a function for the express engine.
-     * @param opts object
      * @returns {Function}
      */
-    static express(opts)
+    express()
     {
-        opts.express = true;
+        var compiler = this;
         return function(filepath,options,done)
         {
-            return Compiler.load(filepath, opts, function(err, template) {
+            return compiler.load(filepath, function(err, template) {
                 return done(err, template(options));
             })
         }

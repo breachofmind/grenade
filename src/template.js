@@ -40,6 +40,16 @@ class Template
     }
 
     /**
+     * Clone a template from this template, with a new parent.
+     * @param parent Template
+     * @returns {Template}
+     */
+    clone(parent)
+    {
+        return new Template(this.input, parent);
+    }
+
+    /**
      * Get the template level depth.
      * @returns {number}
      */

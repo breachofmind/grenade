@@ -39,7 +39,7 @@ module.exports = {
      */
     load: function(name,opts,callback)
     {
-        return Compiler.load(name,opts,callback);
+        return new Compiler(opts).load(name,callback);
     },
 
     /**
@@ -50,9 +50,7 @@ module.exports = {
      */
     compile: function(string,opts)
     {
-        var compiler = new Compiler(opts);
-
-        return compiler.compile(string);
+        return new Compiler(opts).compile(string);
     },
 
     /**
@@ -63,8 +61,6 @@ module.exports = {
      */
     precompile: function(string,opts)
     {
-        var compiler = new Compiler(opts);
-
-        return compiler.precompile(string);
+        return new Compiler(opts).precompile(string);
     }
 };

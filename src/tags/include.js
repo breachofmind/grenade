@@ -9,6 +9,6 @@ var utils = require('../utils');
 Tag.extend('include', {
     evaluate: function() {
         var compiler = this.template.compiler;
-        this.replaceWith(new Template(compiler.contents(this.args), this.template));
+        this.replaceWith(compiler.make(this.args,this.template));
     }
 });
