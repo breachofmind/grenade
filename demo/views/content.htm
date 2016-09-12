@@ -4,7 +4,7 @@
     <h1>Content</h1>
 
     @foreach(item in items)
-        <li>${item.name}</li>
+        <li>${=item.name | toUpper,bold}</li>
     @endforeach
 
     @if(items[0].id == 1)

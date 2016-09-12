@@ -64,7 +64,7 @@ class Compiler
     {
         ok (typeof string == "string", "A string is required.");
 
-        return this.renderer( this.template(string,parent) );
+        return this.renderer( this.template(string,parent) ) ;
     }
 
     /**
@@ -77,13 +77,7 @@ class Compiler
     {
         ok (typeof string == "string", "A string is required.");
 
-        this.log("Compiling template");
-
-        var template = new Template(string, parent||null, this);
-
-        this.log("Compiling complete");
-
-        return template;
+        return new Template(string, parent||null, this);
     }
 
     /**
@@ -97,7 +91,6 @@ class Compiler
 
         return function(data) {
             var output = template.render(data);
-            compiler.log("Template rendered");
             return compiler.prettyPrint ? beautify(output, compiler.prettyPrintOptions) : output;
         }
     }

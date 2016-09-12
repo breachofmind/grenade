@@ -35,6 +35,18 @@ var compiler = new grenade.Compiler({
     debug: true,
 });
 
+grenade.Filter.extend('toUpper', function(value,data) {
+    return value.toUpperCase();
+});
+
+grenade.Filter.extend('currency', function(value,data) {
+    return "$"+value;
+});
+grenade.Filter.extend('bold', function(value,data) {
+    return "<strong>"+value+"</strong>";
+});
+
+
 compiler.load('content', function(err,template) {
 
     if (err) throw err;

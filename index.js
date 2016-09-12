@@ -1,5 +1,6 @@
 var Compiler = require('./src/compiler');
 var Template = require('./src/template');
+var Filter   = require('./src/filter');
 var Tag      = require('./src/tag');
 
 require('./src/tags/extends');
@@ -19,10 +20,16 @@ module.exports = {
     Compiler: Compiler,
 
     /**
-     * Tag class.
-     * @type Tag
+     * Tag Factory class.
+     * @type TagFactory
      */
     Tag: Tag,
+
+    /**
+     * Filter Factory class.
+     * @type FilterFactory
+     */
+    Filter: Filter,
 
     /**
      * Template class.

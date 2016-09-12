@@ -4,6 +4,7 @@ var _     = require('lodash');
 var utils = require('./utils');
 var MatchTag = require('./matchTag');
 var MatchVar = require('./matchVar');
+var Filter = require('./filter');
 var walk = require('./walker');
 
 const RX_TAGS = /\s*?(\@.*[^\s+])/gm;
@@ -115,6 +116,7 @@ class Template
         var object = this.compiler.vars[index];
         var value = this.value(data,object.property);
         if (typeof value !== 'undefined') {
+            value = Filter.apply(object.filters,value,data);
             return object.mode ? value.toString() : _.escape(value).toString();
         }
         return value;

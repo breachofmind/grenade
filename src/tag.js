@@ -1,71 +1,71 @@
 "use strict";
 
-var utils = require('./utils');
-var tags = {};
 
 /**
- * The Tag class.
- * Contains details on how to handle a tag that is encountered in the template.
- * Tags appear as: @mytag() ... @endmytag
- * @author Mike Adamczyk <mike@bom.us>
+ * Factory for creating tags.
  */
-class BaseTag
+class TagFactory
+{
+    constructor()
+    {
+        this.tags = {};
+    }
+
+    /**
+     * Get a defined tag.
+     * @param name string
+     * @returns {*|null}
+     */
+    get(name)
+    {
+        return this.tags[name] || null;
+    }
+
+    /**
+     * Create a new tag.
+     * @param name string
+     * @param opts object
+     * @returns {Tag}
+     */
+    extend(name,opts)
+    {
+        var tag = new Tag(name,opts);
+
+        return this.tags[name] = tag;
+    }
+}
+
+/**
+ * The tag class.
+ */
+class Tag
 {
     constructor(name,opts)
     {
         this.name = name;
         this.block = opts.block || false;
-    }
 
-    parse(args,template)
-    {
-        return eval(args);
-    }
+        /**
+         * Parses the arguments of a tag.
+         * @param args string
+         * @returns {*}
+         */
+        this.parse = opts.parse || function(args) { return eval(args); };
 
-    evaluate(match,template)
-    {
-        return null;
-    }
+        /**
+         * Evaluates the tag after the template has been compiled.
+         * @returns {*}
+         */
+        this.evaluate = opts.evaluate || function() { return null; };
 
-    render(data,match,template)
-    {
-        return "";
-    }
-
-    /**
-     * Get a tag object.
-     * @param name string
-     * @returns {*}
-     */
-    static get(name)
-    {
-        return tags[name];
-    }
-
-
-    /**
-     * Create a tag object.
-     * @param name
-     * @param opts
-     * @returns {Tag}
-     */
-    static extend(name,opts)
-    {
-        class Tag extends BaseTag
-        {
-            constructor(name,opts)
-            {
-                super(name,opts);
-            }
-        }
-        ['parse','evaluate','render'].map(function(func) {
-            if (opts[func]) {
-                Tag.prototype[func] = opts[func];
-            }
-        });
-
-        return tags[name] = new Tag(name,opts);
+        /**
+         * Renders the tag with data.
+         * @param data object
+         * @returns {string}
+         */
+        this.render = opts.render || function(data) { return ""; };
     }
 }
 
-module.exports = BaseTag;
+
+module.exports = new TagFactory();

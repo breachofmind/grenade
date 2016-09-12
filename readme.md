@@ -175,6 +175,32 @@ Include a file at the given location.
 @include("file/name")
 ```
 
+## Filters
+
+Filters are used in much the same way as Angular. They can be defined like so:
+
+```javascript
+var grenade = require('grenade');
+
+grenade.Filter.extend('toUpper', function(value,data) {
+    return value.toUpperCase();
+});
+grenade.Filter.extend('bold', function(value,data) {
+    return "<strong>"+value+"</strong>";
+});
+```
+
+And in the markup, they are applied in order (comma-separated)
+
+```html
+<h1>${=title | toUpper,bold}</h1>
+```
+
+Yields:
+```html
+<h1></strong>TITLE</strong></h1>
+```
+
 ## Creating Custom Tags
 
 Custom tags look like `@tagname(args)`. You can add your own to create custom UI components or control structures.
