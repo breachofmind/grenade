@@ -19,12 +19,14 @@ class TemplateTag
         var Template = require('./template');
 
         this.index = null;
+        this.text = match.text;
         this.type = match.tag.name;
         this.evaluated = false;
         this.template = template;
         this.tag = match.tag;
         this.start = match.start;
         this.end = match.end;
+        this.source = null;
 
         this.args = null;
 
@@ -33,6 +35,11 @@ class TemplateTag
         }
 
         this.scope = this.tag.block ? new Template(match.scope, template, this) : null;
+    }
+
+    setSource(source)
+    {
+        return this.source = source;
     }
 
     /**

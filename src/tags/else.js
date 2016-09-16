@@ -6,6 +6,6 @@ Tag.extend('else', {
     hasArguments: false,
     evaluate: function(template)
     {
-        this.source = "} else {";
+        this.setSource("} else {");
     }
 });

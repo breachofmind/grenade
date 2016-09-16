@@ -3,7 +3,7 @@ var grenade = require('../index');
 var opts = {
     extension: "htm",
     rootPath: __dirname + "/views/",
-    prettyPrint: false,
+    prettyPrint: true,
 };
 
 var data = {

@@ -22,6 +22,12 @@ ${=data.html | escape}
 
 @section(footer)
 
+@verbatim
+    @if(true)
+        <h1>Hello</h1>
+    @endif
+@endverbatim
+
 <ul>
 @foreach([key,item] in data.items)
     <li>${key} ${item.name}</li>

@@ -6,10 +6,10 @@ Tag.extend('for', {
     block:true,
     evaluate: function(template)
     {
-        this.source = `
-        for(${this.args}) {
-            ${this.scope.source}
-        }
-        `;
+        this.setSource(`
+            for(${this.args}) {
+                ${this.scope.source}
+            }
+        `);
     }
 });

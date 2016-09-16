@@ -18,6 +18,7 @@ require('./src/tags/else');
 require('./src/tags/elseif');
 require('./src/tags/foreach');
 require('./src/tags/for');
+require('./src/tags/verbatim');
 
 
 

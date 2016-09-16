@@ -6,10 +6,10 @@ Tag.extend('unless', {
     block:true,
     evaluate: function(template)
     {
-        this.source = `
-        if(! (${this.args})){
-            ${this.scope.source}
-        }
-        `;
+        this.setSource(`
+            if(! (${this.args})){
+                ${this.scope.source}
+            }
+        `);
     }
 });
