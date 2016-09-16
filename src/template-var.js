@@ -17,7 +17,8 @@ class TemplateVar
         this.template = template;
         this.filters = [];
 
-        if (text.indexOf("|") > -1) {
+        // Parse the incoming variable text.
+        if (this.text.indexOf("|") > -1) {
             var parts = this.text.split("|",2);
             this.filters = parts[1].split(",");
             this.text = parts[0].trim();
@@ -29,8 +30,22 @@ class TemplateVar
             this.text = this.text.slice(1);
         }
 
-        var filters = JSON.stringify(this.filters);
-        this.source = `__out.push(__v(${this.text},__data,${filters}));`;
+        this.source = this.getSource();
+    }
+
+    /**
+     * Get the source javascript for compiling.
+     * @returns {string}
+     */
+    getSource()
+    {
+        var src = `__out += ${this.text};`;
+
+        if (this.filters.length) {
+            var filters = JSON.stringify(this.filters);
+            src = `__out += __v(${this.text},${this.template.compiler.localsName},${filters});`;
+        }
+        return src;
     }
 
     flatten()

@@ -50,7 +50,11 @@ class FilterFactory
                 return value;
             }
             for (var i=0; i<filters.length; i++) {
-                value = factory.applyFilter(filters[i],value,data);
+                var name = filters[i].trim();
+                var filter = factory.get(name);
+                if (filter) {
+                    value = filter(value.toString(),data);
+                }
             }
             return value;
         }

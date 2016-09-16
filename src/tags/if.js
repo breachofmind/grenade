@@ -10,7 +10,7 @@ Tag.extend('if', {
         if(${this.args}){
             ${this.scope.source}
         }
-        `.trim();
+        `;
 
         this.source = src;
     }

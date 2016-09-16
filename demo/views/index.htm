@@ -14,22 +14,22 @@
         <p>End</p>
     @endif
 
-${html}
-${=html}
-${=html | escape}
+${data.html}
+${=data.html}
+${=data.html | escape}
 
 @endsection
 
 @section(footer)
 
 <ul>
-@foreach([key,item] in items)
+@foreach([key,item] in data.items)
     <li>${key} ${item.name}</li>
 @endforeach
 </ul>
 
 <ul>
-    @foreach([key,item] in hash)
+    @foreach([key,item] in data.hash)
     <li>${key} ${item}</li>
     @endforeach
 </ul>

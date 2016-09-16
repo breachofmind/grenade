@@ -10,9 +10,12 @@ class Compiler
 {
     constructor(opts)
     {
+        if (! opts) opts = {};
+
         this.rootPath = opts.rootPath || "./";
         this.extension = opts.extension || "htm";
         this.prettyPrint = opts.prettyPrint || false;
+        this.localsName = opts.localsName || 'data';
 
         this.prettyPrintOptions = opts.prettyPrintOptions ||
         {
@@ -24,12 +27,23 @@ class Compiler
     }
 
     /**
-     * Compile a string into a Template object.
+     * Compile a string into a rendering function.
+     * @param string
+     * @param parent Template optional
+     * @returns {Function}
+     */
+    compile(string, parent)
+    {
+        return this.renderer(this.template(string,parent));
+    }
+
+    /**
+     * Compile a string into a template.
      * @param string
      * @param parent Template optional
      * @returns {Template}
      */
-    compile(string, parent)
+    template(string,parent)
     {
         assert.ok(string, "A string is required");
 
@@ -46,14 +60,12 @@ class Compiler
     {
         var cached = this.cached(filename);
         if (cached) {
-            return new Template(cached.input, parent, this);
+            return this.template(cached.input, parent);
         }
 
         var contents = fs.readFileSync(this.path(filename), {encoding:"utf8"});
 
-        var template = new Template(contents.toString(),parent,this);
-
-        return this.cached(filename,template);
+        return this.cached(filename, this.template(contents.toString(), parent));
     }
 
     /**
@@ -118,7 +130,7 @@ class Compiler
                 return done(new Error(err), null);
             }
 
-            var template = this.compile(contents.toString());
+            var template = this.template(contents.toString());
 
             this.cached(filename,template);
 

@@ -25,16 +25,14 @@ class Template
         // The compiled source function.
         if (! this.parent)
         {
-            this.fn = new Function('__data,__v,__out', `
-                with(__data) {
-                    try {
-                        ${this.source}
-                    } catch(e) {
-                        return e;
-                    }
-
-                    return __out.join("").trim();
+            this.fn = new Function(`${this.compiler.localsName},__v,__out`, `
+                try {
+                    ${this.source}
+                } catch(e) {
+                    return e;
                 }
+
+                return __out.trim();
         `);
         }
 
@@ -118,7 +116,7 @@ class Template
         var source = [];
         for (var i=0; i<this.output.length; i++) {
             if (typeof this.output[i] == "string") {
-                source.push("__out.push("+ JSON.stringify(this.output[i]) + ");");
+                source.push("__out += "+ JSON.stringify(this.output[i]) + ";");
                 continue;
             }
             source.push(this.output[i].source);
@@ -133,7 +131,7 @@ class Template
      */
     render(data)
     {
-        return this.fn(data, Filter.func(), []);
+        return this.fn(data, Filter.func(), "");
     }
 }
 
