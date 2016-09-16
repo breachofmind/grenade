@@ -1,6 +1,8 @@
 "use strict";
 
-var find = require('./utils').matches;
+var utils = require('./utils');
+var find = utils.matches;
+var CompileError = utils.CompileError;
 var Tag = require('./tag');
 
 const TAG_RX = /\@((\w+)\((.*)\)|(\w+))/gm;
@@ -30,7 +32,7 @@ class TemplateTag
             this.args = this.tag.parse.call(this, match.args, template);
         }
 
-        this.scope = this.tag.block ? new Template(match.scope, template) : null;
+        this.scope = this.tag.block ? new Template(match.scope, template, this) : null;
     }
 
     /**
@@ -89,6 +91,7 @@ class TemplateTag
             var object = Tag.get(tag);
             if (object) {
                 indexes.push({
+                    input: input,
                     start: match.index,
                     text: line,
                     end: match.index + line.length,
@@ -132,7 +135,7 @@ class TemplateTag
                 }
                 // If open is not 0, a tag was not closed.
                 if (open !== 0) {
-                    throw ("A tag was not closed: "+match.tag.name, input);
+                    throw new CompileError ("A tag was not closed", match);
                 }
             }
 

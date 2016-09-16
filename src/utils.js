@@ -1,5 +1,17 @@
 "use strict";
 
+class CompileError extends Error
+{
+    constructor(message, template)
+    {
+        var section = template.input.substr(template.start,100) + "...";
+        super();
+        this.message = message + `
+        ${section}
+        `;
+    }
+}
+
 module.exports = {
 
     matches: function(rx,input,callback)
@@ -14,4 +26,13 @@ module.exports = {
         return index;
     },
 
+    rethrow: function(error,output)
+    {
+        console.log('throwing');
+        console.log(error,output);
+
+        return output;
+    },
+
+    CompileError: CompileError
 };

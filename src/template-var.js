@@ -1,9 +1,11 @@
 "use strict";
 
-const VAR_RX = /\$\{(.*?)\}/gm;
+const VAR_RX = /\$\{([^\}]+\}?)\}/gm;
+const MODE_RAW = "=";
+const MODE_COMMENT = "#";
 
 var find = require('./utils').matches;
-
+var Filter = require('./filter');
 
 /**
  * A variable in a template.
@@ -15,22 +17,41 @@ class TemplateVar
     {
         this.text = text;
         this.template = template;
-        this.filters = [];
+        this.filters = this.getFilters();
+
+        this.source = this.getSource();
+    }
+
+    /**
+     * Get the filters for this variable.
+     * @returns {Array}
+     */
+    getFilters()
+    {
+        var filters = [];
 
         // Parse the incoming variable text.
         if (this.text.indexOf("|") > -1) {
             var parts = this.text.split("|",2);
-            this.filters = parts[1].split(",");
+            filters = parts[1].split(",");
             this.text = parts[0].trim();
         }
 
-        if (! this.text.startsWith("=")) {
-            this.filters.push('escape');
-        } else {
+        var prefix = this.text[0];
+        if (prefix == MODE_RAW) {
             this.text = this.text.slice(1);
+            return filters;
         }
-
-        this.source = this.getSource();
+        // There can be custom prefixes.
+        var filter = Filter.prefixes[prefix];
+        if (filter) {
+            filters.push(filter.name);
+            this.text = this.text.slice(1);
+        } else {
+            // By default, all values are escaped.
+            filters.push('escape');
+        }
+        return filters;
     }
 
     /**

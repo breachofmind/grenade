@@ -10,4 +10,4 @@ Filter.extend('toLower', function(value,data) {
 
 Filter.extend('slug', function(value,data) {
     return value.toLowerCase().replace(/ /g,'-').replace(/[^\w-]+/g,'')
-})
+});

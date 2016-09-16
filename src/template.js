@@ -5,15 +5,17 @@ var Tag = require('./tag');
 var TemplateTag = require('./template-tag');
 var TemplateVar = require('./template-var');
 var Filter = require('./filter');
+var rethrow = require('./utils').rethrow;
 
 class Template
 {
-    constructor(input, parent, compiler)
+    constructor(input, parent, scope)
     {
         this.input = input;
         this.output = [];
         this.parent = parent || null;
-        this.compiler = compiler || this.parent.compiler;
+        this.compiler = this.parent ? this.parent.compiler : scope;
+        this.scope = this.parent ? scope : null;
 
         this.tags = TemplateTag.parser(this, input);
 
@@ -25,11 +27,11 @@ class Template
         // The compiled source function.
         if (! this.parent)
         {
-            this.fn = new Function(`${this.compiler.localsName},__v,__out`, `
+            this.fn = new Function(`${this.compiler.localsName},__v,rethrow,__out`, `
                 try {
                     ${this.source}
                 } catch(e) {
-                    return e;
+                    return rethrow(e,__out);
                 }
 
                 return __out.trim();
@@ -131,7 +133,7 @@ class Template
      */
     render(data)
     {
-        return this.fn(data, Filter.func(), "");
+        return this.fn(data, Filter.functions(), rethrow, "");
     }
 }
 

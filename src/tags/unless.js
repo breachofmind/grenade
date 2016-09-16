@@ -2,12 +2,12 @@
 
 var Tag = require('../tag');
 
-Tag.extend('if', {
+Tag.extend('unless', {
     block:true,
     evaluate: function(template)
     {
         this.source = `
-        if(${this.args}){
+        if(! (${this.args})){
             ${this.scope.source}
         }
         `;

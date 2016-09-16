@@ -9,6 +9,7 @@ class FilterFactory
     constructor()
     {
         this.filters = {};
+        this.prefixes = {};
     }
 
     /**
@@ -20,6 +21,7 @@ class FilterFactory
     {
         return this.filters[name.trim()] || null;
     }
+
 
     /**
      * Apply a filter to a value.
@@ -41,7 +43,7 @@ class FilterFactory
      * Return a helper function for the compiled template.
      * @returns {Function}
      */
-    func()
+    functions()
     {
         var factory = this;
         return function(value,data,filters)
@@ -53,21 +55,51 @@ class FilterFactory
                 var name = filters[i].trim();
                 var filter = factory.get(name);
                 if (filter) {
-                    value = filter(value.toString(),data);
+                    value = filter.action(value,data);
                 }
             }
-            return value;
+            return value.toString();
         }
     }
 
     /**
      * Create a new filter.
      * @param name string
+     * @param opts object
      * @param action Function
+     * @returns Filter
      */
-    extend(name,action)
+    extend(name,opts,action)
     {
-        this.filters[name] = action;
+        if (arguments.length == 2) {
+            action = opts;
+            opts = {};
+        }
+        var filter = new Filter(name,opts,action);
+        if (filter.prefix) {
+            this.prefixes[filter.prefix] = filter;
+        }
+
+        return this.filters[name] = filter;
+    }
+}
+
+/**
+ * Filter class.
+ */
+class Filter
+{
+    constructor(name,opts,action)
+    {
+        if (! opts) opts = {};
+
+        this.name = name;
+        this.action = action;
+
+        // A variable can have custom prefixes.
+        // Such as: "=", which escapes the value.
+        // Prefix filters occur after all other filters.
+        this.prefix = opts.prefix || false;
     }
 }
 
