@@ -12,7 +12,7 @@ class Compiler
     {
         if (! opts) opts = {};
 
-        this.rootPath = opts.rootPath || "./";
+        this.rootPath = path.normalize(opts.rootPath) || "./";
         this.extension = opts.extension || "htm";
         this.prettyPrint = opts.prettyPrint || false;
         this.localsName = opts.localsName || 'data';
@@ -45,7 +45,7 @@ class Compiler
      */
     template(string,parent)
     {
-        assert.ok(string, "A string is required");
+        assert.ok(typeof string == 'string', "A string is required");
 
         return new Template(string, parent||null, this);
     }

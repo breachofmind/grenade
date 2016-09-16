@@ -42,7 +42,7 @@ describe('configuration', function()
 describe('basic strings', function()
 {
     it('should throw error if no arguments given', function(){
-        expect(compiler.compile).to.throw('A string is required.');
+        expect(compiler.template).to.throw('A string is required');
     });
     var t0 = compiler.compile('');
     it('should return empty string if given empty string', function(){
@@ -61,14 +61,14 @@ describe('basic strings', function()
 
 describe('variables', function()
 {
-    var tVarEscaped = compiler.compile("${test}");
-    var tVarRaw = compiler.compile("${=test}");
-    var tHtmlEscaped = compiler.compile("${html}");
-    var tHtmlRaw = compiler.compile("${=html}");
+    var tVarEscaped = compiler.compile("${data.test}");
+    var tVarRaw = compiler.compile("${=data.test}");
+    var tHtmlEscaped = compiler.compile("${data.html}");
+    var tHtmlRaw = compiler.compile("${=data.html}");
     var tComment1 = compiler.compile("${#comment}");
     var tComment2 = compiler.compile("${#comment is a long string, with commas and stuff}");
-    var t2Vars = compiler.compile("${test}${comment}");
-    var t3 = compiler.compile("${zero}${one}");
+    var t2Vars = compiler.compile("${data.test}${data.comment}");
+    var t3 = compiler.compile("${data.zero}${data.one}");
 
     it('should resolve escaped variable, non-html', function(){
         expect(tVarEscaped(o)).to.equal(o.test);
@@ -139,7 +139,7 @@ describe('if/else', function()
 describe('foreach', function()
 {
     var t0 = compiler.compile(`
-        @foreach(item in arr)
+        @foreach(item in data.arr)
         \${item}
         @endforeach
     `);
@@ -148,6 +148,6 @@ describe('foreach', function()
         expect(t0({arr:[]})).to.equal("");
     });
     it('should return each value if array given', function(){
-        expect(t0(o)).to.equal("redgreenblue");
+        expect(t0(o).replace(/\s/g,"")).to.equal("redgreenblue");
     });
 });
