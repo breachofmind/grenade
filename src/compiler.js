@@ -16,6 +16,7 @@ class Compiler
         this.extension = opts.extension || "htm";
         this.prettyPrint = opts.prettyPrint || false;
         this.localsName = opts.localsName || 'data';
+        this.express = opts.express || false;
 
         this.prettyPrintOptions = opts.prettyPrintOptions ||
         {
@@ -130,7 +131,7 @@ class Compiler
             return this.renderer(cached);
         }
 
-        fs.readFile(this.path(filename), function(err,contents) {
+        fs.readFile(this.express ? filename : this.path(filename), function(err,contents) {
 
             if (err) {
                 return done(new Error(err), null);

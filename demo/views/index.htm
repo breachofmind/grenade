@@ -4,6 +4,10 @@
 
 @include(partials/object)
 
+@push(stack)
+<p>STACK1</p>
+@endpush
+
 <h1 class="${?{name:true, noname:false}}">Grenade Demo</h1>
 
     @if(false)
@@ -21,6 +25,10 @@ ${=data.html | escape}
 @endsection
 
 @section(footer)
+
+@push(stack)
+<p>STACK ${data.title}</p>
+@endpush
 
 @verbatim
     @if(true)
@@ -50,6 +58,8 @@ ${=data.html | escape}
     <li>Menu 2</li>
     <li>Menu 3</li>
 </ul>
+
+@stack(stack)
 
 @endsection
 

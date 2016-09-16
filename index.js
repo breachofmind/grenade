@@ -3,6 +3,7 @@
 var Compiler = require('./src/compiler');
 var Template = require('./src/template');
 var Filter   = require('./src/filter');
+var Tag      = require('./src/tag');
 
 require('./src/filters/escape');
 require('./src/filters/class');
@@ -19,6 +20,8 @@ require('./src/tags/elseif');
 require('./src/tags/foreach');
 require('./src/tags/for');
 require('./src/tags/verbatim');
+require('./src/tags/push');
+require('./src/tags/stack');
 
 
 
@@ -29,6 +32,8 @@ module.exports = new(function Grenade(){
     this.Template = Template;
 
     this.Filter = Filter;
+
+    this.Tag = Tag;
 
     /**
      * Load a file and return a rendering function.
@@ -51,6 +56,7 @@ module.exports = new(function Grenade(){
      */
     this.express = function(opts)
     {
+        opts.express = true;
         var compiler = new Compiler(opts);
 
         return function(filename, options, done)
@@ -59,7 +65,7 @@ module.exports = new(function Grenade(){
                 if (err) {
                     return done(new Error(err), null);
                 }
-                return done(null,template);
+                return done(null,template(options));
             })
         }
     }

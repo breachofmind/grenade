@@ -28,6 +28,7 @@ class Template
         if (! this.parent)
         {
             this.fn = new Function(`${this.compiler.localsName},__v,rethrow,__out`, `
+                __stacks = {};
                 try {
                     ${this.source}
                 } catch(e) {
