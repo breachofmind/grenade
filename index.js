@@ -1,90 +1,37 @@
+"use strict";
+
 var Compiler = require('./src/compiler');
 var Template = require('./src/template');
 var Filter   = require('./src/filter');
-var Tag      = require('./src/tag');
+
+require('./src/filters/escape');
+require('./src/filters/text-transforms');
 
 require('./src/tags/extends');
-require('./src/tags/foreach');
-require('./src/tags/if');
+require('./src/tags/yield');
 require('./src/tags/include');
 require('./src/tags/section');
-require('./src/tags/unless');
-require('./src/tags/yield');
-require('./src/tags/show');
+require('./src/tags/if');
+require('./src/tags/else');
+require('./src/tags/elseif');
+require('./src/tags/foreach');
+require('./src/tags/for');
 
-module.exports = {
 
-    /**
-     * Compiler class.
-     * @type Compiler
-     */
-    Compiler: Compiler,
 
-    /**
-     * Tag Factory class.
-     * @type TagFactory
-     */
-    Tag: Tag,
+module.exports = new(function Grenade(){
 
-    /**
-     * Filter Factory class.
-     * @type FilterFactory
-     */
-    Filter: Filter,
+    this.Compiler = Compiler;
 
-    /**
-     * Template class.
-     * @type Template
-     */
-    Template: Template,
+    this.Template = Template;
 
-    /**
-     * Alias to load function.
-     * @param name
-     * @param opts
-     * @param callback
-     * @returns {*}
-     */
-    load: function(name,opts,callback)
-    {
-        return new Compiler(opts).load(name,callback);
-    },
+    this.Filter = Filter;
 
-    /**
-     * Alias to compiler function.
-     * @param string
-     * @param opts object
-     * @returns {Function}
-     */
-    compile: function(string,opts)
-    {
-        return new Compiler(opts).compile(string);
-    },
-
-    /**
-     * Alias to precompiler.
-     * @param string
-     * @param opts object
-     * @returns {Function}
-     */
-    precompile: function(string,opts)
-    {
-        return new Compiler(opts).precompile(string);
-    },
-
-    /**
-     * Return an engine function for express.
-     * @param opts object
-     * @returns {Function}
-     */
-    express: function(opts)
+    this.load = function(filename, opts, done)
     {
         var compiler = new Compiler(opts);
-        return function(filepath,options,done)
-        {
-            return compiler.load(filepath, function(err, template) {
-                return done(err, template(options));
-            })
-        }
+
+        return compiler.load(filename,done);
     }
-};
+
+})();

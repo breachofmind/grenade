@@ -1,44 +1,33 @@
-var _ = require('lodash');
+"use strict";
+
 var Tag = require('../tag');
-var utils = require('../utils');
 
-/**
- * A loop structure.
- * Loops through the given array of data and render the given scope.
- */
 Tag.extend('foreach', {
-
-    block: true,
-
-    parse: function(args) {
-        var index,key,array;
+    block:true,
+    parse: function(args,template) {
         var parts = args.trim().split(" in ",2);
-        array = parts[1];
-        key = parts[0];
+        var array = parts[1];
+        var key = parts[0];
+        var index = "i";
 
         // If the first character is parenthesis...
-        if (parts[0][0] == "(") {
-            var tracking = parts[0].replace(/[\(|\)]/g,"").split(",",2);
+        if (parts[0][0] == "[") {
+            var tracking = parts[0].replace(/[\[|\]]/g,"").split(",",2);
             index = tracking[0];
             key = tracking[1];
         }
         return {key: key, array: array, index:index}
     },
 
-    render: function(data) {
-        var out = "";
-        var array = this.template.value(data, this.args.array) || [];
+    evaluate: function(template)
+    {
+        var args = this.args;
 
-        var $parent = _.clone(data);
-        for (var i= 0, len=array.length; i<len; i++) {
-            var copy = {
-                $parent: $parent
-            };
-            copy[this.args.key] = array[i];
-            if (this.args.index) copy[this.args.index] = i;
-
-            out += this.scope.render(copy);
+        this.source = `
+        for(var ${args.index} in ${args.array}) {
+            var ${args.key}=${args.array}[${args.index}];
+            ${this.scope.source}
         }
-        return out;
+        `;
     }
 });

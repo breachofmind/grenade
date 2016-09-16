@@ -22,27 +22,38 @@ class FilterFactory
     }
 
     /**
-     * Apply the given filters in order on the value given.
-     * @param filters array|string
+     * Apply a filter to a value.
+     * @param name string
      * @param value string
      * @param data object
      * @returns {string}
      */
-    apply(filters,value,data)
+    applyFilter(name,value,data)
     {
-        if (! filters || !filters.length) return value;
-
-        if (! Array.isArray(filters)) {
-            filters = [filters];
-        }
-        for (var i=0; i<filters.length; i++)
-        {
-            var filter = this.get(filters[i]);
-            if (filter) {
-                value = filter(value, data);
-            }
+        var filter = this.get(name.trim());
+        if (filter) {
+            return filter(value.toString(),data);
         }
         return value;
+    }
+
+    /**
+     * Return a helper function for the compiled template.
+     * @returns {Function}
+     */
+    func()
+    {
+        var factory = this;
+        return function(value,data,filters)
+        {
+            if (! filters || ! filters.length) {
+                return value;
+            }
+            for (var i=0; i<filters.length; i++) {
+                value = factory.applyFilter(filters[i],value,data);
+            }
+            return value;
+        }
     }
 
     /**

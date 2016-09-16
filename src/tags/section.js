@@ -1,22 +1,18 @@
-var Tag = require('../tag');
-var utils = require('../utils');
+"use strict";
 
-/**
- * Create a new section block for a layout.
- * Used in conjunction with @extends and @yield.
- */
+var Tag = require('../tag');
+
 Tag.extend('section', {
-    block: true,
-    parse: function(args) {
-        var name = eval(args);
-        if (! this.template.sections) this.template.sections = {};
-        this.template.sections[name] = this;
-        return name;
+    block:true,
+    parse: function(args,template) {
+        if (! template.sections) {
+            template.sections = {};
+        }
+        template.sections[args] = this;
+        return args;
     },
-    evaluate: function() {
-        this.erase();
-    },
-    render: function(data) {
-        return this.scope.render(data);
+
+    evaluate: function(template) {
+        this.replaceWith("");
     }
 });

@@ -1,5 +1,37 @@
 "use strict";
 
+/**
+ * The tag class.
+ */
+class Tag
+{
+    constructor(name,opts)
+    {
+        this.name = name;
+        this.block = opts.block || false;
+        this.hasArguments = opts.hasArguments || true;
+
+        /**
+         * Parses the arguments of a tag.
+         * @param args string
+         * @returns {*}
+         */
+        this.parse = opts.parse || function(args) { return args; };
+
+        /**
+         * Evaluates the tag after the template has been compiled.
+         * @returns {*}
+         */
+        this.evaluate = opts.evaluate || function() { return null; };
+
+        /**
+         * Renders the tag with data.
+         * @param data object
+         * @returns {string}
+         */
+        this.render = opts.render || function(data) { return ""; };
+    }
+}
 
 /**
  * Factory for creating tags.
@@ -32,38 +64,6 @@ class TagFactory
         var tag = new Tag(name,opts);
 
         return this.tags[name] = tag;
-    }
-}
-
-/**
- * The tag class.
- */
-class Tag
-{
-    constructor(name,opts)
-    {
-        this.name = name;
-        this.block = opts.block || false;
-
-        /**
-         * Parses the arguments of a tag.
-         * @param args string
-         * @returns {*}
-         */
-        this.parse = opts.parse || function(args) { return eval(args); };
-
-        /**
-         * Evaluates the tag after the template has been compiled.
-         * @returns {*}
-         */
-        this.evaluate = opts.evaluate || function() { return null; };
-
-        /**
-         * Renders the tag with data.
-         * @param data object
-         * @returns {string}
-         */
-        this.render = opts.render || function(data) { return ""; };
     }
 }
 

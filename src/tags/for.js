@@ -2,16 +2,14 @@
 
 var Tag = require('../tag');
 
-Tag.extend('if', {
+Tag.extend('for', {
     block:true,
     evaluate: function(template)
     {
-        var src = `
-        if(${this.args}){
+        this.source = `
+        for(${this.args}) {
             ${this.scope.source}
         }
-        `.trim();
-
-        this.source = src;
+        `;
     }
 });

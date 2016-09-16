@@ -1,0 +1,52 @@
+@extends(layouts/master)
+
+@section(body)
+
+@include(partials/object)
+
+<h1>${"Grenade Demo"}</h1>
+
+    @if(false)
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Amet ea est et facere ipsam quo repellendus, sapiente. Consequuntur, eligendi, iste?</p>
+    @elseif(true)
+        <p>Else!</p>
+    @else
+        <p>End</p>
+    @endif
+
+${html}
+${=html}
+${=html | escape}
+
+@endsection
+
+@section(footer)
+
+<ul>
+@foreach([key,item] in items)
+    <li>${key} ${item.name}</li>
+@endforeach
+</ul>
+
+<ul>
+    @foreach([key,item] in hash)
+    <li>${key} ${item}</li>
+    @endforeach
+</ul>
+
+<h3>Number</h3>
+@for(n=1; n<5; n++)
+<p>${n}</p>
+@endfor
+
+<ul class="footer-menu">
+    <li>Menu 1</li>
+    <li>Menu 2</li>
+    <li>Menu 3</li>
+</ul>
+
+@endsection
+
+
+
+

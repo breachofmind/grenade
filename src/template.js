@@ -1,166 +1,142 @@
 "use strict";
 
-var _     = require('lodash');
-var utils = require('./utils');
-var MatchTag = require('./matchTag');
-var MatchVar = require('./matchVar');
+var Promise = require('bluebird');
+var Tag = require('./tag');
+var TemplateTag = require('./template-tag');
+var TemplateVar = require('./template-var');
 var Filter = require('./filter');
-var walk = require('./walker');
 
-//const RX_TAGS = /\s*?(\@.*[^\s+])/gm;
-const RX_TAGS = /(\@\w+\(.*\)|\@\w+)/gm;
-
-/**
- * The template class.
- * Splits incoming strings/arrays and generates javascript source code.
- * @author Mike Adamczyk <mike@bom.us>
- */
 class Template
 {
-    /**
-     * Create a new template object.
-     * @param input string|array
-     * @param parent Template|null
-     * @param compiler Compiler|null
-     */
-    constructor(input,parent,compiler)
+    constructor(input, parent, compiler)
     {
-        this.input = Array.isArray(input) ? input : input.split(RX_TAGS);
+        this.input = input;
         this.output = [];
-        this.parent = parent;
+        this.parent = parent || null;
         this.compiler = compiler || this.parent.compiler;
 
-        walk(this);
+        this.tags = TemplateTag.parser(this, input);
 
-        this.source = this.generateSource();
+        // Split the input into an output array.
+        this.walk();
 
-        this.fn = new Function('data,rethrow', `
-            var __out = "";
-            try { __out = ${this.source == "" ? "''" : this.source}; } catch(e) { __out = rethrow(e); }
-            return __out;;
+        this.source = this.getSource();
+
+        // The compiled source function.
+        if (! this.parent)
+        {
+            this.fn = new Function('__data,__v,__out', `
+                with(__data) {
+                    try {
+                        ${this.source}
+                    } catch(e) {
+                        return e;
+                    }
+
+                    return __out.join("").trim();
+                }
         `);
-    }
-
-    /**
-     * Clone a template from this template, with a new parent.
-     * @param parent Template
-     * @returns {Template}
-     */
-    clone(parent)
-    {
-        return new Template(this.input, parent);
-    }
-
-    /**
-     * Get the template level depth.
-     * @returns {number}
-     */
-    get level()
-    {
-        var parent = this.parent,
-            level = 0;
-        while(parent) {
-            parent = parent.parent;
-            level ++;
         }
-        return level;
+
+    }
+
+
+    /**
+     * Walk the input and found tags and variables
+     * and create the output array.
+     * @returns {*[]}
+     */
+    walk()
+    {
+        if (! this.tags.length) {
+           return this.search(this.input);
+        }
+        var index = 0;
+        for (var i=0; i<this.tags.length; i++)
+        {
+            var tag = this.tags[i];
+
+            // Piece before
+            var before = this.input.slice(index, tag.start);
+            if (before !== "") {
+                // Search for variables and add to output.
+                this.search(before);
+            }
+            this.output.push(tag);
+
+            tag.index = this.output.indexOf(tag);
+            tag.evaluate();
+
+            index = tag.end;
+        }
+
+        // Push the end
+        var end = this.input.slice(index);
+        if (end !== "") {
+            this.search(end);
+        }
     }
 
     /**
-     * Generate the javascript source code from the output.
+     * Search a string for variable references.
+     * @param string
+     */
+    search(string)
+    {
+        var out = TemplateVar.parser(this,string);
+
+        this.output = this.output.concat(out);
+    }
+
+    /**
+     * Flattens the output array.
+     * Used for debugging.
+     * @returns {Array}
+     */
+    flatten()
+    {
+        var out = [];
+        this.output.forEach(function(output) {
+            if (! output || output == "") {
+                return;
+            }
+            if (output instanceof TemplateTag || output instanceof Template || output instanceof TemplateVar) {
+                out = out.concat(output.flatten());
+            } else {
+                out.push(output);
+            }
+        });
+        return out;
+    }
+
+    /**
+     * Get the source javascript for compilation.
      * @returns {string}
      */
-    generateSource()
+    getSource()
     {
         var source = [];
-        for(var i=0; i<this.output.length; i++)
-        {
-            var object = this.output[i];
-
-            if (!object) {
-                object = "";
+        for (var i=0; i<this.output.length; i++) {
+            if (typeof this.output[i] == "string") {
+                source.push("__out.push("+ JSON.stringify(this.output[i]) + ");");
+                continue;
             }
-            if (typeof object == 'string') {
-                source.push ( JSON.stringify(object) ); continue;
-            }
-            if (object instanceof Template || object instanceof MatchVar) {
-                source.push ( object.source ); continue;
-            }
-            if (object instanceof MatchTag) {
-                source.push( object.source );
-            }
+            source.push(this.output[i].source);
         }
-        return source.join(" + ");
+        return source.join("\n");
     }
 
     /**
-     * Process and render a tag.
+     * Render the compiled javascript.
      * @param data object
-     * @param index number
-     * @returns {*}
-     */
-    tag(data, index)
-    {
-        //var match = this.root.tags[index];
-        var match = this.compiler.tags[index];
-        return match.render(data);
-    }
-
-    /**
-     * Process and render a variable.
-     * @param data object
-     * @param index number
-     * @returns {*}
-     */
-    prop(data,index)
-    {
-        var object = this.compiler.vars[index];
-        var value = this.value(data,object.property);
-        if (typeof value !== 'undefined') {
-            value = Filter.apply(object.filters,value,data);
-            return object.mode ? value.toString() : _.escape(value).toString();
-        }
-        return value;
-    }
-
-    /**
-     * Get the value of a property.
-     * @param data object
-     * @param property string
-     * @returns {*}
-     */
-    value(data, property)
-    {
-        // data is the current scoped value.
-        var value = _.get(data, property);
-        if (typeof value=='undefined' && data.$parent) {
-            return this.value(data.$parent, property);
-        }
-        return value;
-    }
-
-    /**
-     * Render the template.
-     * @param data
      * @returns {*}
      */
     render(data)
     {
-        return this.fn(data,rethrow).trim();
+        return this.fn(data, Filter.func(), []);
     }
-
-    /**
-     * Return the template as a string.
-     * @returns {string|*}
-     */
-    toString()
-    {
-        return this.source;
-    }
-}
-
-function rethrow(e) {
-    return e;
 }
 
 module.exports = Template;
+
+

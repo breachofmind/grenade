@@ -1,16 +1,19 @@
-var Tag = require('../tag');
-var utils = require('../utils');
+"use strict";
 
-/**
- * Yields a section block with the given section name.
- * Used in conjunction with the @layout and @section tags.
- */
+var Tag = require('../tag');
+
 Tag.extend('yield', {
-    evaluate: function() {
-        if (this.template.parent.sections) {
-            var tag = this.template.parent.sections[this.args]; // TagObject
+    evaluate: function(template) {
+
+        if (template.parent.sections[this.args]) {
+            var tag = template.parent.sections[this.args];
+            tag.index = this.index;
             tag.source = tag.scope.source;
-            this.replaceWith(tag);
+
+            return this.replaceWith(tag);
         }
+
+        // Template section wasn't found.
+        return this.replaceWith("");
     }
 });

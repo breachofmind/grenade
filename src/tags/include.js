@@ -1,14 +1,11 @@
-var Tag = require('../tag');
-var Template = require('../template');
-var utils = require('../utils');
+"use strict";
 
-/**
- * Include a file at the tag location.
- * A file can be a regular template or a template with a layout
- */
+var Tag = require('../tag');
+
 Tag.extend('include', {
-    evaluate: function() {
-        var compiler = this.template.compiler;
-        this.replaceWith(compiler.make(this.args,this.template));
+    evaluate: function(template) {
+        var include = template.compiler.make(this.args, template);
+
+        this.replaceWith (include);
     }
-});
+})
