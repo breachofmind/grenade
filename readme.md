@@ -19,22 +19,6 @@ This was designed to work with the server and supports a number of features:
 - Can work with Angular or other handlebars engines on the frontend, since delimiters can be changed.
 
 
-## Performance
-
-Performance is definitely a concern, so templates are compiled to plain javascript and the compiled templates are cached by filename. 
-
-Benchmark testing has been done with Marko's handsome [Templating benchmark suite](https://github.com/marko-js/templating-benchmarks).
-
-## I hate having to write "data.variable" in my templates
-
-I do too, but you wouldn't believe the performance increase when the `with(data) {...}` is removed from the compiled javascript. Most of the heavy hitters avoid using `with` for performance reasons. 
-
-If you don't care, feel free to fork and add the `with` yourself in `src/template.js`!
-
-## What's with the name?
-
-Evolution of a name. "Blade-for-node" -> "Node-Blade" -> "Nade" -> "Grenade".
-
 ## Installing
 
 ```bash
@@ -355,6 +339,33 @@ And so our markup can be:
 ## Testing
 
 `mocha test`
+
+## Notes
+
+### Why Not Use...
+
+- __EJS?__ Performance, no native layout support, includes are relative, and I hate writing closing braces `<% } %>`.
+- __Handlebars?__ Doesn't play nice with Angular front-ends, layouts require plugin.
+- __Pug?__ Syntax is hard to read sometimes, can't copy/paste the source code into html files for use, and whitespace is annoying.
+- __Marko?__ Writing HTML tags as control structures or inlining control structures doesn't seem right, doesn't play nice with some IDE's.
+
+Also, a common theme is lack of extensibility. I want to be able to extend like crazy.
+
+### Performance
+
+Performance is definitely a concern, so templates are compiled to plain javascript and the compiled templates are cached by filename. 
+
+Benchmark testing has been done with Marko's handsome [Templating benchmark suite](https://github.com/marko-js/templating-benchmarks).
+
+### I hate having to write "data.variable" in my templates
+
+I do too, but you wouldn't believe the performance increase when the `with(data) {...}` is removed from the compiled javascript. Most of the heavy hitters avoid using `with` for performance reasons. 
+
+If you don't care, feel free to fork and add the `with` yourself in `src/template.js`!
+
+### What's with the name?
+
+Evolution of a name. "Blade-for-node" -> "Node-Blade" -> "Nade" -> "Grenade".
 
 ## Contributing
 
