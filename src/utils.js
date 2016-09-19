@@ -14,6 +14,14 @@ class CompileError extends Error
 
 module.exports = {
 
+    /**
+     * Given the regex, find matches in the input and call a function.
+     * Returns the index of the last match.
+     * @param rx RegEx
+     * @param input string
+     * @param callback function
+     * @returns {number}
+     */
     matches: function(rx,input,callback)
     {
         var index = 0;
@@ -26,6 +34,12 @@ module.exports = {
         return index;
     },
 
+    /**
+     * Rethrow any exceptions from rendering.
+     * @param error object
+     * @param output string
+     * @returns {string}
+     */
     rethrow: function(error,output)
     {
         var message = `[${error.name}] - ${error.message}`;
@@ -33,6 +47,11 @@ module.exports = {
         return message+" \n"+output+"...!!!";
     },
 
+    /**
+     * Parses the @foreach arguments into usuable components.
+     * @param args string
+     * @returns {{key: *, array: *, index: string}}
+     */
     parseForEach: function(args)
     {
         var parts = args.trim().split(" in ",2);
@@ -47,6 +66,16 @@ module.exports = {
             key = tracking[1];
         }
         return {key: key, array: array, index:index}
+    },
+
+    /**
+     * Helper for appending to the output.
+     * @param what string
+     * @returns {string}
+     */
+    append: function(what)
+    {
+        return "__out += " + what + ";";
     },
 
     CompileError: CompileError

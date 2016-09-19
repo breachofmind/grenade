@@ -10,6 +10,7 @@ class Tag
         this.name = name;
         this.block = opts.block || false;
         this.hasArguments = opts.hasArguments || true;
+        this.passArguments = opts.passArguments || false;
 
         /**
          * Parses the arguments of a tag.
@@ -29,7 +30,7 @@ class Tag
          * @param data object
          * @returns {string}
          */
-        this.render = opts.render || function(data) { return ""; };
+        this.render = opts.render || null;
     }
 }
 

@@ -4,7 +4,10 @@
 
 @include(partials/object)
 
+<div class="@show(positive:true, negative:false)"></div>
+
 @push(stack)
+@date(MMM Do YY)
 <p>STACK1</p>
 @endpush
 
@@ -32,7 +35,7 @@ ${=data.html | escape}
 
 @verbatim
     @if(true)
-        <h1>Hello</h1>
+        <h1 class="">Hello</h1>
     @endif
 @endverbatim
 

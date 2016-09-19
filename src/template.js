@@ -1,34 +1,42 @@
 "use strict";
 
-var Promise = require('bluebird');
+var utils = require('./utils');
 var Tag = require('./tag');
 var TemplateTag = require('./template-tag');
 var TemplateVar = require('./template-var');
 var Filter = require('./filter');
-var rethrow = require('./utils').rethrow;
+var rethrow = utils.rethrow;
+var append = utils.append;
 
 class Template
 {
+    /**
+     * Template constructor.
+     * @param input string
+     * @param parent Template
+     * @param scope Compiler|Template|TemplateTag (Compiler if root template)
+     */
     constructor(input, parent, scope)
     {
-        this.input = input;
-        this.output = [];
-        this.parent = parent || null;
-        this.compiler = this.parent ? this.parent.compiler : scope;
-        this.scope = this.parent ? scope : null;
+        this.input      = input;
+        this.parent     = parent || null;
+        this.compiler   = this.isRoot ? scope : this.parent.compiler;
+        this.scope      = this.isRoot ? null  : scope;
 
-        this.tags = TemplateTag.parser(this, input);
+        if (this.isRoot) {
+            this._tagIndex = {};
+            this._n = 0;
+        }
 
-        // Split the input into an output array.
-        this.walk();
-
-        this.source = this.getSource();
+        this.id         = this.isRoot ? 0 : this.root._n ++;
+        this.tags       = TemplateTag.parser(this, input);
+        this.output     = this.setOutput();
+        this.source     = this.getSource();
 
         // The compiled source function.
-        if (! this.parent)
+        if (this.isRoot)
         {
-            this.fn = new Function(`${this.compiler.localsName},__v,rethrow,__out`, `
-                __stacks = {};
+            this.fn = new Function(`${this.compiler.localsName},__v,__t,rethrow,__out`, `
                 try {
                     ${this.source}
                 } catch(e) {
@@ -41,52 +49,69 @@ class Template
 
     }
 
+    /**
+     * Get the root template.
+     * @returns {*}
+     */
+    get root()
+    {
+        if (this.isRoot) return this;
+
+        var parent = this.parent;
+        while (! parent.isRoot) {
+            parent = parent.parent;
+        }
+        return parent;
+    }
 
     /**
-     * Walk the input and found tags and variables
+     * Check if this template is root.
+     * @returns {boolean}
+     */
+    get isRoot()
+    {
+        return this.parent ? false : true;
+    }
+
+    /**
+     * Walk the input of found tags and variables
      * and create the output array.
      * @returns {*[]}
      */
-    walk()
+    setOutput()
     {
-        if (! this.tags.length) {
-           return this.search(this.input);
-        }
-        var index = 0;
-        for (var i=0; i<this.tags.length; i++)
-        {
-            var tag = this.tags[i];
+        this.output = [];
 
+        if (! this.tags.length) {
+           return this.output = this.output.concat(TemplateVar.parser(this,this.input));
+        }
+
+        var index = 0;
+        this.tags.forEach(function(tag)
+        {
             // Piece before
             var before = this.input.slice(index, tag.start);
             if (before !== "") {
                 // Search for variables and add to output.
-                this.search(before);
+                this.output = this.output.concat(TemplateVar.parser(this,before));
             }
             this.output.push(tag);
 
             tag.index = this.output.indexOf(tag);
+            tag.store();
             tag.evaluate();
 
             index = tag.end;
-        }
+
+        }.bind(this));
 
         // Push the end
         var end = this.input.slice(index);
         if (end !== "") {
-            this.search(end);
+            this.output = this.output.concat(TemplateVar.parser(this,end));
         }
-    }
 
-    /**
-     * Search a string for variable references.
-     * @param string
-     */
-    search(string)
-    {
-        var out = TemplateVar.parser(this,string);
-
-        this.output = this.output.concat(out);
+        return this.output;
     }
 
     /**
@@ -116,15 +141,14 @@ class Template
      */
     getSource()
     {
-        var source = [];
-        for (var i=0; i<this.output.length; i++) {
-            if (typeof this.output[i] == "string") {
-                source.push("__out += "+ JSON.stringify(this.output[i]) + ";");
-                continue;
+        return this.output.map(function(line)
+        {
+            if (typeof line == "string") {
+                return append(JSON.stringify(line));
             }
-            source.push(this.output[i].source);
-        }
-        return source.join("\n");
+            return line.source;
+
+        }).join("\n");
     }
 
     /**
@@ -134,7 +158,7 @@ class Template
      */
     render(data)
     {
-        return this.fn(data, Filter.functions(), rethrow, "");
+        return this.fn(data, Filter.functions(), this._tagIndex, rethrow, "");
     }
 }
 

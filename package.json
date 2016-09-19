@@ -19,7 +19,8 @@
   "dependencies": {
     "bluebird": "^3.4.6",
     "js-beautify": "^1.6.4",
-    "lodash": "^4.15.0"
+    "lodash": "^4.15.0",
+    "moment": "^2.15.0"
   },
   "devDependencies": {
     "chai": "^3.5.0"

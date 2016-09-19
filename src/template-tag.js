@@ -1,9 +1,10 @@
 "use strict";
 
-var utils = require('./utils');
-var find = utils.matches;
-var CompileError = utils.CompileError;
-var Tag = require('./tag');
+var grenade         = require('grenade');
+var utils           = require('./utils');
+var append          = utils.append;
+var find            = utils.matches;
+var CompileError    = utils.CompileError;
 
 const TAG_RX = /\@((\w+)\((.*)\)|(\w+))/gm;
 
@@ -16,27 +17,33 @@ class TemplateTag
 {
     constructor(match,template)
     {
-        var Template = require('./template');
+        this.key        = null;
+        this.index      = null;
+        this.text       = match.text;
+        this.type       = match.tag.name;
+        this.evaluated  = false;
+        this.template   = template;
+        this.tag        = match.tag;
+        this.start      = match.start;
+        this.end        = match.end;
+        this.source     = null;
+        this.args       = null;
+        this.scope      = null;
 
-        this.index = null;
-        this.text = match.text;
-        this.type = match.tag.name;
-        this.evaluated = false;
-        this.template = template;
-        this.tag = match.tag;
-        this.start = match.start;
-        this.end = match.end;
-        this.source = null;
-
-        this.args = null;
+        if (this.tag.block) {
+            this.scope = new grenade.Template(match.scope, template, this);
+        }
 
         if (this.tag.hasArguments) {
             this.args = this.tag.parse.call(this, match.args, template);
         }
-
-        this.scope = this.tag.block ? new Template(match.scope, template, this) : null;
     }
 
+    /**
+     * Set the source code.
+     * @param source string
+     * @returns {*}
+     */
     setSource(source)
     {
         return this.source = source;
@@ -51,7 +58,40 @@ class TemplateTag
         if (! this.evaluated) {
             this.evaluated = true;
             this.tag.evaluate.call(this, this.template);
+
+            // Use the default source for rendering.
+            if (! this.source && this.tag.render) {
+                var passArgs = this.tag.passArguments ? `,${this.args}` : ",null";
+                this.setSource(append(`__t["${this.key}"].render(${this.template.compiler.localsName}${passArgs})`));
+            }
         }
+    }
+
+    /**
+     * Call the tag render method.
+     * @param data object
+     * @param args mixed
+     * @returns {string}
+     */
+    render(data,args)
+    {
+        if (! this.tag.render) {
+            throw (`Tag @${this.type} does not have a render() method`);
+        }
+        return this.tag.render.call(this,data,args,this.template);
+    }
+
+    /**
+     * Store this tag in the tag index.
+     * It's rendering function can be used later in the source.
+     * @return string
+     */
+    store()
+    {
+        this.key = `\$${this.template.id}\$${this.index}`;
+        this.template.root._tagIndex[this.key] = this;
+
+        return this.key;
     }
 
     /**
@@ -95,7 +135,7 @@ class TemplateTag
             var closing = line.substr(0,4) == "@end";
             var args = closing ? null : match[3];
             var tag = closing ? match[1].slice(3) : (! match[2] ? match[1] : match[2]);
-            var object = Tag.get(tag);
+            var object = grenade.Tag.get(tag);
             if (object) {
                 indexes.push({
                     input: input,

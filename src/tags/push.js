@@ -4,17 +4,20 @@ var Tag = require('../tag');
 
 Tag.extend('push', {
     block:true,
+    parse: function(args,template)
+    {
+        if (! template.root.stacks) {
+            template.root.stacks = {};
+        }
+        if (! template.root.stacks[args]) {
+            template.root.stacks[args] = [];
+        }
+
+        return args;
+    },
     evaluate: function(template)
     {
-        var name = this.args;
-
-        this.setSource(`
-        if(! __stacks["${name}"]) { __stacks["${name}"] = []; }
-            __stacks["${name}"].push((function(){
-                var __out = "";
-                ${this.scope.source}
-                return __out;
-            }) ());
-        `);
-    }
+        template.root.stacks[this.args].push(this);
+        this.replaceWith("");
+    },
 });

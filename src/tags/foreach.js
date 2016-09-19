@@ -14,10 +14,13 @@ Tag.extend('foreach', {
         var args = this.args;
 
         this.setSource(`
+        (function(){
             for(var ${args.index} in ${args.array}) {
                 var ${args.key}=${args.array}[${args.index}];
                 ${this.scope.source}
             }
+
+        })();
         `);
     }
 });

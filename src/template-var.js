@@ -31,7 +31,7 @@ class TemplateVar
         var filters = [];
 
         // Parse the incoming variable text.
-        if (this.text.indexOf("|") > -1) {
+        if (this.text.indexOf(" | ") > -1) {
             var parts = this.text.split("|",2);
             filters = parts[1].split(",");
             this.text = parts[0].trim();
