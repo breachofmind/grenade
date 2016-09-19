@@ -7,7 +7,7 @@ Tag.extend('yield', {
 
         if (template.parent.sections[this.args]) {
             var tag = template.parent.sections[this.args];
-            tag.index = this.index;
+            //tag.index = this.index;
             tag.source = tag.scope.source;
 
             return this.replaceWith(tag);

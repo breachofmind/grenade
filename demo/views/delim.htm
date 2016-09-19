@@ -1,0 +1,21 @@
+@extends(layouts/master)
+
+@section(body)
+
+    <h1 class="{{ ? title:true, notitle:true }}">{{ data.title }}</h1>
+
+    {{ = data.html }}
+
+@endsection
+
+@section(footer)
+
+    <ul class="footer-menu">
+
+    </ul>
+
+@endsection
+
+
+
+

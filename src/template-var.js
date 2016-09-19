@@ -1,6 +1,5 @@
 "use strict";
 
-const VAR_RX = /\$\{([^\}]+\}?)\}/gm;
 const MODE_RAW = "=";
 const MODE_COMMENT = "#";
 
@@ -39,14 +38,21 @@ class TemplateVar
 
         var prefix = this.text[0];
         if (prefix == MODE_RAW) {
-            this.text = this.text.slice(1);
+            this.text = this.text.slice(1).trim();
             return filters;
         }
         // There can be custom prefixes.
         var filter = Filter.prefixes[prefix];
         if (filter) {
-            filters.push(filter.name);
-            this.text = this.text.slice(1);
+            if (filter.pushPrefix) {
+                filters.push(filter.name);
+            } else {
+                filters.unshift(filter.name);
+            }
+            this.text = this.text.slice(1).trim();
+            if (filter.transform) {
+                this.text = filter.transform(this.text);
+            }
         } else {
             // By default, all values are escaped.
             filters.push('escape');
@@ -87,7 +93,7 @@ class TemplateVar
         if (!input) {
             return output;
         }
-        var endIndex = find(VAR_RX, input, function(match,start)
+        var endIndex = find(template.compiler.delimiter, input, function(match,start)
         {
             output.push(input.slice(start,match.index));
 

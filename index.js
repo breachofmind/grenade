@@ -48,15 +48,17 @@ exports.load = function(filename,opts,done)
 
 /**
  * Return an engine function for express.
- * @param opts
+ * @param app Express
+ * @param opts object
  * @returns {Function}
  */
-exports.express = function(opts)
+exports.express = function(app, opts)
 {
     opts.express = true;
+
     var compiler = new Compiler(opts);
 
-    return function(filename, options, done)
+    var engine = function(filename, options, done)
     {
         compiler.load(filename, function(err,template) {
             if (err) {
@@ -64,5 +66,7 @@ exports.express = function(opts)
             }
             return done(null,template(options));
         })
-    }
+    };
+
+    return app.engine(opts.extension, engine)
 };

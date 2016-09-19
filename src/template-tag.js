@@ -88,8 +88,10 @@ class TemplateTag
      */
     store()
     {
-        this.key = `\$${this.template.id}\$${this.index}`;
-        this.template.root._tagIndex[this.key] = this;
+        var root = this.template.root;
+        var len = Object.keys(root._tagIndex).length;
+        this.key = `\$${this.template.id}\$${len}`;
+        root._tagIndex[this.key] = this;
 
         return this.key;
     }

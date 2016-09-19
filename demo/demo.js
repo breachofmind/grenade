@@ -4,6 +4,7 @@ var opts = {
     extension: "htm",
     rootPath: __dirname + "/views/",
     prettyPrint: true,
+    //delimiter: grenade.utils.DELIM_HANDLEBARS
 };
 
 var data = {

@@ -3,6 +3,7 @@
 var fs       = require('fs');
 var path     = require('path');
 var assert   = require('assert');
+var utils    = require('./utils');
 var Template = require('./template');
 var beautify = require('js-beautify').html;
 
@@ -17,6 +18,7 @@ class Compiler
         this.prettyPrint = opts.prettyPrint || false;
         this.localsName = opts.localsName || 'data';
         this.express = opts.express || false;
+        this.delimiter = opts.delimiter || utils.DELIM_JAVASCRIPT;
 
         this.prettyPrintOptions = opts.prettyPrintOptions ||
         {

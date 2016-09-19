@@ -14,6 +14,9 @@ class CompileError extends Error
 
 module.exports = {
 
+    DELIM_JAVASCRIPT: /\$\{\s*([^\}]+\}?)\}/gm,
+    DELIM_HANDLEBARS: /\{\{\s*(.*?[^\{\}\s]+)\s*\}\}/gm,
+
     /**
      * Given the regex, find matches in the input and call a function.
      * Returns the index of the last match.

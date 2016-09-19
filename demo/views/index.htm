@@ -3,6 +3,7 @@
 @section(body)
 
 @include(partials/object)
+${#Comment#}
 
 <div class="@show(positive:true, negative:false)"></div>
 
@@ -11,7 +12,7 @@
 <p>STACK1</p>
 @endpush
 
-<h1 class="${?{name:true, noname:false}}">Grenade Demo</h1>
+<h1 class="${?name:true, noname:false}">Grenade Demo</h1>
 
     @if(false)
         <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Amet ea est et facere ipsam quo repellendus, sapiente. Consequuntur, eligendi, iste?</p>

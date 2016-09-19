@@ -1,25 +1,35 @@
 # Grenade
-A template library for Node and Express, influenced by Taylor Otwell's "Blade" template engine for Laravel.
+A template engine for Node and Express, influenced by Taylor Otwell's "Blade" template engine for Laravel.
 
-## Why do we need another templater?
+## Why do we need another template engine?
 
-We don't. I just happen to have a lot of requirements for my template libraries and I've always liked the way Blade feels.
+We don't. I just wanted more flexibility with my template engine.
 
 This was designed to work with the server and supports a number of features:
 
-- Natively supports Layouts..
-- Escaped, unescaped, and comment variables.
-- Make Function calls like you can with EJS.
+- Natively supports Layouts.
+- Custom delimiters for variables, if you really want the handlebars delimiters.
+- Escaped variables, raw variables, or custom variable output.
+- Ability to call javascript functions and helpers, like EJS.
 - Ability to extend with custom tags.
+- Ability to write custom filter functions.
 - Plugs into Express easily.
-- Easy to write and read, unobtrusive syntax.
-- Scoping of data structures, like Angular. (ie. `@foreach((i,item) in items)`)
-- Ability to precompile templates, like handlebars or EJS.
-- Can work with Angular or other handlebars templaters on the client, since this library doesn't use handlebars delimiters.
+- Easy to write and read.
+- Ability to precompile templates (coming soon).
+- Can work with Angular or other handlebars engines on the frontend, since delimiters can be changed.
+
 
 ## Performance
 
-Still tweaking performance. Not quite ready for production yet. However, I have been testing it with Marko's template performance tester. Let's just say it's faster than swig and nunjucks but slower than handlebars.
+Performance is definitely a concern, so templates are compiled to plain javascript and the compiled templates are cached by filename. 
+
+Benchmark testing has been done with Marko's handsome [Templating benchmark suite](https://github.com/marko-js/templating-benchmarks).
+
+## I hate having to write "data.variable" in my templates
+
+I do too, but you wouldn't believe the performance increase when the `with(data) {...}` is removed from the compiled javascript. Most of the heavy hitters avoid using `with` for performance reasons. 
+
+If you don't care, feel free to fork and add the `with` yourself in `src/template.js`!
 
 ## What's with the name?
 
@@ -42,7 +52,9 @@ var opts = {
     rootPath: __dirname+"/views/",
     extension: 'htm',
     prettyPrint: true,
-    debug: true,
+    prettyPrintOptions: {}, Uses js-beautify module.
+    localsName: "data", // Your variables are prepended with this. ie, ${data.varName}
+    delimiters: grenade.utils.DELIM_HANDLEBARS // This is a regex. Change to whatever.
 };
 
 // This will load and compile the file "./views/content.htm";
@@ -67,10 +79,10 @@ var app = express();
 // like "htm" if your IDE doesn't support custom file types.
 // Be sure to specify your views path, since grenade does not use relative paths.
 
-app.engine('nade', grenade.express({
+grenade.express(app, {
     rootPath: 'views',
-    extension: 'nade'
-}));
+    extension: 'nade'  
+});
 ```
 
 
@@ -108,7 +120,7 @@ Let's make a simple template that is based on a parent layout.
 
 ### Variables
 
-Notice that variables have the javascript-esque syntax: `${variable}`. By default, the values are escaped, much like other templaters.
+By default, variables have the javascript-esque syntax: `${variable}`. You can, however, use other delimiters if you so desire.
 
 - `${variable}` - Escaped value.
 - `${=variable}` - Raw value, good for HTML output.
@@ -118,21 +130,23 @@ Notice that variables have the javascript-esque syntax: `${variable}`. By defaul
 
 Grenade allows you to call functions from your data object, like EJS. They have the variable syntax:
 
-`${testing(arg1,arg2,"string")}`
+`${ testing(arg1,arg2,"string") }`
 
-### Control structures
+### Control structures / Loops
 
-Grenade comes with some basic structures. More are on the way.
+Grenade comes with all the basic control structures, and some cool ones.
 
-#### if/else
+#### if/else/else if
 
 Display the contents of the block if the expression is truthy.
 
 ```html
 @if(condition)
     <h1>It's true.</h1>
+@elseif(condition)
+    <h1>This condition is true.</h1>
 @else
-    <h1>It's false.</h1>
+    <h1>None are true.</h1>
 @endif
 ```
 
@@ -141,13 +155,24 @@ Display the contents of the block if the expression is truthy.
 Displays the contents of the block if the expression is falsey.
 
 ```html
-@if(condition)
+@unless(condition)
     <h1>It's false.</h1>
 @else
     <h1>It's true.</h1>
 @endif
 ```
 
+#### for
+
+Your basic `for` loop, just like javascript.
+
+```html
+<ul>
+@for(var i=1; i<=items.length; i++)
+    <li>Item ${i}</li>
+@endfor
+</ul>
+```
 
 #### foreach
 
@@ -161,7 +186,7 @@ Loop through the given data array.
 </ul>
 
 <ul>
-@foreach((index,item) in items)
+@foreach([index,item] in items)
     <li>${index} : ${item}</li>
 @endforeach
 </ul>
@@ -180,9 +205,45 @@ Include a file at the given location.
 Shows the given strings if the expressions are truthy. Useful for creating classes.
 
 ```html
-<li class="@show(first: i==0, last: $parent.items.length == i)">Item</li>
+<li class="@show(first: i==0, last: items.length == i)">Item</li>
 ```
 
+This is pretty common, so a prefix filter also works here:
+
+```html
+<li class="${? first:i==0, last:items.length == i}">Item</li>
+```
+
+#### verbatim
+
+Display the contents of the block exactly how it's shown.
+
+```html
+@verbatim
+    @if
+    <h1>This whole thing shows up, including the @if.</h1>
+    @endif
+@endverbatim
+```
+
+#### push/stack
+
+Collects the `@push` scopes and renders them all under the `@stack` name. Useful for adding scripts or CSS links to the document head or footer.
+
+```html
+@stack(links)
+
+@push(links)
+<link rel="stylesheet" href="..."/>
+@endpush
+
+...
+
+@push(links)
+<link rel="stylesheet" href="..."/>
+<link rel="stylesheet" href="..."/>
+@endpush
+```
 
 ## Filters
 
@@ -208,6 +269,36 @@ And in the markup, they are applied in order (comma-separated)
 Yields:
 ```html
 <h1></strong>TITLE</strong></h1>
+```
+
+### Prefix filters
+
+Sometimes, filters or helpers are done so often, a custom prefix would be nice to have. One good example is using locales:
+
+```html
+<!-- Instead of this... -->
+${toLocale(variable)}
+${toLocale("en_us.welcome")}
+
+<!-- Let's do this -->
+${>"en_us.welcome"}
+```
+
+To do this, add the following option when creating a filter:
+```javascript
+grenade.Filter.extend('toLocale', {prefix:">", pushPrefix: false}, function(value,data) {
+    return data.toLocale(value);
+});
+```
+
+__Note__ Prefix filters are applied LAST by default, so be sure to include the `pushPrefix: false` in this case. So, our locale string is modified accordingly by other filters.
+
+```html
+<h1>${>"en_us.welcome" | toUpper,bold}</h1>
+<h1>${>"en_us.welcome" | escape}</h1>
+
+<!-- This also works -->
+<h1>${"en_us.welcome" | toLocale,toUpper,bold}</h1>
 ```
 
 ## Creating Custom Tags

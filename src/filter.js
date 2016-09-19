@@ -96,10 +96,17 @@ class Filter
         this.name = name;
         this.action = action;
 
+        // Transform the text given to something
+        // the compiled javascript can use.
+        this.transform = opts.transform || false;
+
         // A variable can have custom prefixes.
         // Such as: "=", which escapes the value.
         // Prefix filters occur after all other filters.
         this.prefix = opts.prefix || false;
+
+        // When using a prefix, is it the first filter applied or last?
+        this.pushPrefix = opts.pushPrefix || false;
     }
 }
 

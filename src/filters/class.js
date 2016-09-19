@@ -1,11 +1,19 @@
 var Filter = require('../filter');
 
+var opts = {
+    prefix:"?",
+    pushPrefix: false,
+    transform:function(text) {
+        return "{"+text+"}";
+    }
+};
+
 /**
  * Return the object key names, if the values are truthy.
  * Useful for doing conditional classes.
  * @example ${?{display:true, nodisplay:false}}
  */
-Filter.extend('class', {prefix:"?"}, function(value,data) {
+Filter.extend('class', opts, function(value,data) {
     if (typeof value != "object") {
         return value;
     }

@@ -5,15 +5,15 @@ var Tag = require('../tag');
 Tag.extend('stack', {
     evaluate: function(template)
     {
-        var stack = template.root.stacks[this.args];
-        if (! stack) {
-            return;
+        if (template.root.hasOwnProperty('stacks') && template.root.stacks[this.args]) {
+            var stack = template.root.stacks[this.args];
+
+            var source = [];
+            for (var i=0;i<stack.length; i++)
+            {
+                source.push(stack[i].scope.source);
+            }
+            this.source = source.join("\n");
         }
-        var source = [];
-        for (var i=0;i<stack.length; i++)
-        {
-            source.push(stack[i].scope.source);
-        }
-        this.source = source.join("\n");
     }
 });
