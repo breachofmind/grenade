@@ -5,8 +5,14 @@ var utils = require('../utils');
 var moment = require('moment');
 
 Tag.extend('date', {
-    render: function(data,template)
+    passArguments: true,
+    render: function(data,args,template)
     {
-        return moment().format(this.args);
+        if (typeof args == 'string') {
+            return moment().format(args);
+        } else if(Array.isArray(args)) {
+            return moment(args[0]).format(args[1]);
+        }
+
     }
 });

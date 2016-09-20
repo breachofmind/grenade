@@ -11,6 +11,7 @@ var data = {
     name: {
         get:function() { return "mike"; }
     },
+    date: new Date(),
     title: "Grenade Demo",
     colors: ['red','green','blue'],
     items: [

@@ -9,6 +9,7 @@ var utils    = require('./src/utils');
 require('./src/filters/escape');
 require('./src/filters/class');
 require('./src/filters/text-transforms');
+require('./src/filters/date');
 
 require('./src/tags/extends');
 require('./src/tags/yield');
