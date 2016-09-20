@@ -1,23 +1,29 @@
 {
   "name": "grenade",
-  "version": "0.0.1",
-  "description": "Node-blade (nade) javascript templater",
+  "version": "0.1.0",
+  "description": "Javascript template engine for Node.js",
   "main": "index.js",
   "scripts": {
     "test": "mocha test"
   },
+  "keywords": [
+    "template",
+    "node",
+    "express",
+    "blade",
+    "laravel"
+  ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/breachofmind/nade.git"
+    "url": "git+https://github.com/breachofmind/grenade.git"
   },
   "author": "Mike Adamczyk <mike@bom.us>",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/breachofmind/nade/issues"
+    "url": "https://github.com/breachofmind/grenade/issues"
   },
-  "homepage": "https://github.com/breachofmind/nade#readme",
+  "homepage": "https://github.com/breachofmind/grenade#readme",
   "dependencies": {
-    "bluebird": "^3.4.6",
     "js-beautify": "^1.6.4",
     "lodash": "^4.15.0",
     "moment": "^2.15.0"

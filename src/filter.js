@@ -30,11 +30,11 @@ class FilterFactory
      * @param data object
      * @returns {string}
      */
-    applyFilter(name,value,data)
+    apply(name,value,data)
     {
         var filter = this.get(name.trim());
         if (filter) {
-            return filter(value.toString(),data);
+            return filter.action(value,data);
         }
         return value;
     }

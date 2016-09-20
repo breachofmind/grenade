@@ -6,12 +6,15 @@ var assert   = require('assert');
 var utils    = require('./utils');
 var Template = require('./template');
 var beautify = require('js-beautify').html;
+var pkg      = require('../package.json');
 
 class Compiler
 {
     constructor(opts)
     {
         if (! opts) opts = {};
+
+        this.version = pkg.version;
 
         /**
          * The root views path.
