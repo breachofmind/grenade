@@ -13,19 +13,66 @@ class Compiler
     {
         if (! opts) opts = {};
 
+        /**
+         * The root views path.
+         * @type {string}
+         */
         this.rootPath = path.normalize(opts.rootPath || "./");
+
+        /**
+         * The file extension.
+         * @type {string}
+         */
         this.extension = opts.extension || "htm";
+
+        /**
+         * Pretty print the output html?
+         * @type {boolean}
+         */
         this.prettyPrint = opts.prettyPrint || false;
+
+        /**
+         * Pretty print options, for JS beautify.
+         * @type {{}}
+         */
+        this.prettyPrintOptions = opts.prettyPrintOptions ||
+            {
+                index:2,
+                max_preserve_newlines: 0
+            };
+
+
+        /**
+         * The local data object name.
+         * @type {string}
+         */
         this.localsName = opts.localsName || 'data';
+
+        /**
+         * Using express?
+         * @type {boolean}
+         */
         this.express = opts.express || false;
+
+        /**
+         * Limiter for variables.
+         * @type {RegExp}
+         */
         this.delimiter = opts.delimiter || utils.DELIM_JAVASCRIPT;
 
-        this.prettyPrintOptions = opts.prettyPrintOptions ||
-        {
-            index:2,
-            max_preserve_newlines: 0
-        };
+        /**
+         * Enable template caching?
+         * Disable if developing locally.
+         * @type {boolean}
+         */
+        this.enableCache = opts.enableCache || true;
 
+
+        /**
+         * The cache object.
+         * filename: Template
+         * @type {{}}
+         */
         this.cache = {};
     }
 
@@ -96,12 +143,14 @@ class Compiler
     cached(filename,template)
     {
         if (typeof template == 'undefined') {
-            if (this.cache.hasOwnProperty(filename)) {
+            if (this.enableCache && this.cache.hasOwnProperty(filename)) {
                 return this.cache[filename];
             }
             return null;
         }
-        return this.cache[filename] = template;
+        if (this.enableCache) this.cache[filename] = template;
+
+        return template;
     }
 
     /**
@@ -130,7 +179,7 @@ class Compiler
     {
         var cached = this.cached(filename);
         if (cached) {
-            return this.renderer(cached);
+            return done(null, this.renderer(cached));
         }
 
         fs.readFile(this.express ? filename : this.path(filename), function(err,contents) {
