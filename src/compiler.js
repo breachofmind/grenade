@@ -12,71 +12,93 @@ class Compiler
 {
     constructor(opts)
     {
-        if (! opts) opts = {};
-
-        this.version = pkg.version;
-
         /**
          * The root views path.
          * @type {string}
          */
-        this.rootPath = path.normalize(opts.rootPath || "./");
+        this.rootPath = "./";
 
         /**
          * The file extension.
          * @type {string}
          */
-        this.extension = opts.extension || "htm";
+        this.extension = "htm";
 
         /**
          * Pretty print the output html?
          * @type {boolean}
          */
-        this.prettyPrint = opts.prettyPrint || false;
+        this.prettyPrint = false;
 
         /**
          * Pretty print options, for JS beautify.
          * @type {{}}
          */
-        this.prettyPrintOptions = opts.prettyPrintOptions ||
-            {
-                index:2,
-                max_preserve_newlines: 0
-            };
+        this.prettyPrintOptions = {
+            index:2,
+            max_preserve_newlines: 0
+        };
 
 
         /**
          * The local data object name.
          * @type {string}
          */
-        this.localsName = opts.localsName || 'data';
+        this.localsName = 'data';
 
         /**
          * Using express?
          * @type {boolean}
          */
-        this.express = opts.express || false;
+        this.express = false;
 
         /**
          * Limiter for variables.
          * @type {RegExp}
          */
-        this.delimiter = opts.delimiter || utils.DELIM_JAVASCRIPT;
+        this.delimiter = utils.DELIM_JAVASCRIPT;
 
         /**
          * Enable template caching?
          * Disable if developing locally.
          * @type {boolean}
          */
-        this.enableCache = opts.enableCache || true;
-
+        this.enableCache = true;
 
         /**
          * The cache object.
          * filename: Template
          * @type {{}}
+         * @private
          */
-        this.cache = {};
+        this._cache = {};
+
+        /**
+         * Grenade version.
+         * @type string
+         * @private
+         */
+        this._version = pkg.version;
+
+        this.setOptions(opts);
+    }
+
+    /**
+     * Set the compiler options.
+     * @param opts object
+     * @returns Compiler
+     */
+    setOptions(opts)
+    {
+        if (! opts) opts = {};
+        Object.keys(opts).forEach(function(key){
+            if (this.hasOwnProperty(key) && typeof this[key] != 'function' && ! key.startsWith("_")) {
+                this[key] = opts[key];
+            }
+        }.bind(this));
+        this.rootPath = path.normalize(this.rootPath);
+
+        return this;
     }
 
     /**
@@ -146,12 +168,12 @@ class Compiler
     cached(filename,template)
     {
         if (typeof template == 'undefined') {
-            if (this.enableCache && this.cache.hasOwnProperty(filename)) {
-                return this.cache[filename];
+            if (this.enableCache && this._cache.hasOwnProperty(filename)) {
+                return this._cache[filename];
             }
             return null;
         }
-        if (this.enableCache) this.cache[filename] = template;
+        if (this.enableCache) this._cache[filename] = template;
 
         return template;
     }
