@@ -70,7 +70,7 @@ class TemplateVar
 
         if (this.filters.length) {
             var filters = JSON.stringify(this.filters);
-            src = `__out += __v(${this.text},${this.template.compiler.localsName},${filters});`;
+            src = `__out += __val(${this.text},${this.template.compiler.localsName},${filters});`;
         }
         return src;
     }

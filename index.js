@@ -26,6 +26,7 @@ require('./src/tags/push');
 require('./src/tags/stack');
 require('./src/tags/date');
 require('./src/tags/show');
+require('./src/tags/with');
 
 exports.Compiler = Compiler;
 exports.Template = Template;

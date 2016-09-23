@@ -36,7 +36,7 @@ class Template
         // The compiled source function.
         if (this.isRoot)
         {
-            this.fn = new Function(`${this.compiler.localsName},__v,__t,rethrow,__out`, `
+            this.fn = new Function(`${this.compiler.localsName},__val,__tag,rethrow,__out`, `
                 try {
                     ${this.source}
                 } catch(e) {

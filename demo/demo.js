@@ -13,6 +13,10 @@ var data = {
     },
     date: new Date(),
     title: "Grenade Demo",
+    model: {
+        name: 'Model',
+        range: 5
+    },
     colors: ['red','green','blue'],
     items: [
         {name: "Item 1", numbers: [1,2,3]},
@@ -27,7 +31,7 @@ var data = {
     html: "<div class='html'>My Html</div>"
 };
 
-grenade.load('index',opts, function(err,template) {
+grenade.load('with',opts, function(err,template) {
 
     console.log(template(data));
 });
