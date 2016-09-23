@@ -48,17 +48,19 @@ class FilterFactory
         var factory = this;
         return function(value,data,filters)
         {
-            if (! filters || ! filters.length) {
-                return value;
-            }
-            for (var i=0; i<filters.length; i++) {
-                var name = filters[i].trim();
-                var filter = factory.get(name);
-                if (filter) {
-                    value = filter.action(value,data);
+            if (filters && filters.length && value)
+            {
+                for (var i=0; i<filters.length; i++)
+                {
+                    var name = filters[i].trim();
+                    var filter = factory.get(name);
+                    if (filter) {
+                        value = filter.action(value,data);
+                    }
                 }
             }
-            return value.toString();
+
+            return typeof value == 'undefined' ? "undefined" : value.toString();
         }
     }
 
