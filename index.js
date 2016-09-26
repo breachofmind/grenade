@@ -73,3 +73,13 @@ exports.express = function(app, opts)
 
     return app.engine(opts.extension, engine)
 };
+
+/**
+ * Expressway provider.
+ * @param opts object
+ * @returns {*}
+ */
+exports.provider = function(opts)
+{
+    return require('./src/support/provider')(exports,opts);
+};
