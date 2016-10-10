@@ -1,6 +1,7 @@
 "use strict";
 
-var Tag = require('../tag');
+var Tag = require('../Tag');
+var utils = require('../support/utils');
 
 Tag.extend('else', {
     hasArguments: false,

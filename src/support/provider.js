@@ -1,19 +1,24 @@
 "use strict";
 
-var expressway = require('expressway');
+var Expressway = require('expressway');
 
 module.exports = function(grenade,opts)
 {
-    class GrenadeProvider extends expressway.Provider
+    return class GrenadeProvider extends Expressway.Provider
     {
-        constructor()
+        constructor(app)
         {
-            super('grenade');
+            super(app);
 
-            this.requires('express');
+            this.requires = ['ExpressProvider'];
         }
 
-        register(app)
+        /**
+         * Register with the application.
+         * @param app Application
+         * @param express Express
+         */
+        register(app,express)
         {
             var options = opts || {
                 rootPath:  app.path('views_path'),
@@ -21,13 +26,17 @@ module.exports = function(grenade,opts)
                 extension: "htm"
             };
 
-            grenade.express(app.express, options);
+            grenade.express(express, options);
 
-            grenade.Filter.extend('lang',{prefix:">", pushPrefix:false}, function(value,data) {
-                return data.lang(value);
-            });
+            grenade.Filter.extend(
+                'lang',
+                {
+                    prefix:">",
+                    pushPrefix:false
+                },
+                function(value,data) {
+                    return data.lang(value);
+                });
         }
     }
-
-    return new GrenadeProvider();
-}
+};

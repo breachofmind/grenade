@@ -1,13 +1,13 @@
 "use strict";
 
-var Tag = require('../tag');
+var Tag = require('../Tag');
+var utils = require('../support/utils');
 
 Tag.extend('yield', {
     evaluate: function(template) {
 
         if (template.parent.sections[this.args]) {
             var tag = template.parent.sections[this.args];
-            //tag.index = this.index;
             tag.source = tag.scope.source;
 
             return this.replaceWith(tag);

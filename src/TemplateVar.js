@@ -1,10 +1,6 @@
 "use strict";
 
-const MODE_RAW = "=";
-const MODE_COMMENT = "#";
-
-var find = require('./utils').matches;
-var Filter = require('./filter');
+var Filter = require('./Filter');
 
 /**
  * A variable in a template.
@@ -37,7 +33,7 @@ class TemplateVar
         }
 
         var prefix = this.text[0];
-        if (prefix == MODE_RAW) {
+        if (prefix == TemplateVar.MODE_RAW) {
             this.text = this.text.slice(1).trim();
             return filters;
         }
@@ -75,43 +71,17 @@ class TemplateVar
         return src;
     }
 
+    /**
+     * Flatten method, for debugging.
+     * @returns {*}
+     */
     flatten()
     {
         return this.text;
     }
-
-    /**
-     * Parse an input string into strings and variable objects.
-     * @param template Template
-     * @param input string
-     * @returns {Array}
-     */
-    static parser(template,input)
-    {
-        var output = [];
-
-        if (!input) {
-            return output;
-        }
-        var endIndex = find(template.compiler.delimiter, input, function(match,start)
-        {
-            output.push(input.slice(start,match.index));
-
-            // This is a comment.
-            if (match[1][0] == "#") {
-                return;
-            }
-            output.push(new TemplateVar(match[1],template));
-        });
-
-        var end = input.slice(endIndex);
-        if (end!=="") {
-            output.push(end);
-        }
-
-        return output;
-    }
-
 }
+
+TemplateVar.MODE_RAW     = "=";
+TemplateVar.MODE_COMMENT = "#";
 
 module.exports = TemplateVar;

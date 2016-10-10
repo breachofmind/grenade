@@ -4,4 +4,11 @@
 
 @endwith
 
-@options([name,name] in data.items)
+<select name="test" id="Test">
+    @options([name,name] in data.items)
+</select>
+
+@component(example)
+    name: "My Name"
+    number: ${n}
+@endcomponent

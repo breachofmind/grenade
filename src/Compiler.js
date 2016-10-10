@@ -3,8 +3,8 @@
 var fs       = require('fs');
 var path     = require('path');
 var assert   = require('assert');
-var utils    = require('./utils');
-var Template = require('./template');
+var utils    = require('./support/utils');
+var Template = require('./Template');
 var beautify = require('js-beautify').html;
 var pkg      = require('../package.json');
 

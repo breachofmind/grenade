@@ -1,12 +1,13 @@
 "use strict";
 
-var utils = require('./utils');
-var Tag = require('./tag');
-var TemplateTag = require('./template-tag');
-var TemplateVar = require('./template-var');
-var Filter = require('./filter');
-var rethrow = utils.rethrow;
-var append = utils.append;
+var utils       = require('./support/utils');
+var Tag         = require('./Tag');
+var TemplateTag = require('./TemplateTag');
+var TemplateVar = require('./TemplateVar');
+var Filter      = require('./Filter');
+var Parser      = require('./Parser');
+var rethrow     = utils.rethrow;
+var append      = utils.append;
 
 class Template
 {
@@ -22,6 +23,7 @@ class Template
         this.parent     = parent || null;
         this.compiler   = this.isRoot ? scope : this.parent.compiler;
         this.scope      = this.isRoot ? null  : scope;
+        this.parser     = new Parser(this);
 
         if (this.isRoot) {
             this._tagIndex = {};
@@ -29,7 +31,7 @@ class Template
         }
 
         this.id         = this.isRoot ? 0 : this.root._n ++;
-        this.tags       = TemplateTag.parser(this, input);
+        this.tags       = this.parser.parseTags(this.input);
         this.output     = this.setOutput();
         this.source     = this.getSource();
 
@@ -83,17 +85,17 @@ class Template
         this.output = [];
 
         if (! this.tags.length) {
-           return this.output = this.output.concat(TemplateVar.parser(this,this.input));
+           return this.output = this.output.concat(this.parser.parseVars(this.input));
         }
 
         var index = 0;
-        this.tags.forEach(function(tag)
+        this.tags.forEach((tag) =>
         {
             // Piece before
             var before = this.input.slice(index, tag.start);
             if (before !== "") {
                 // Search for variables and add to output.
-                this.output = this.output.concat(TemplateVar.parser(this,before));
+                this.output = this.output.concat(this.parser.parseVars(before));
             }
             this.output.push(tag);
 
@@ -103,12 +105,12 @@ class Template
 
             index = tag.end;
 
-        }.bind(this));
+        });
 
         // Push the end
         var end = this.input.slice(index);
         if (end !== "") {
-            this.output = this.output.concat(TemplateVar.parser(this,end));
+            this.output = this.output.concat(this.parser.parseVars(end));
         }
 
         return this.output;

@@ -1,4 +1,4 @@
-var Filter = require('../filter');
+var Filter = require('../Filter');
 
 var opts = {
     prefix:"?",

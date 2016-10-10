@@ -5,10 +5,11 @@
  */
 class Tag
 {
-    constructor(name,opts)
+    constructor(name, opts)
     {
         this.name = name;
         this.block = opts.block || false;
+        this.yaml = opts.yaml || false;
         this.hasArguments = opts.hasArguments || true;
         this.passArguments = opts.passArguments || false;
 
@@ -31,6 +32,8 @@ class Tag
          * @returns {string}
          */
         this.render = opts.render || null;
+
+        if (this.yaml) this.block = true;
     }
 }
 
@@ -69,4 +72,4 @@ class TagFactory
 }
 
 
-module.exports = new TagFactory();
+module.exports = new TagFactory;

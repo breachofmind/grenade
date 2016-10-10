@@ -112,4 +112,4 @@ class Filter
     }
 }
 
-module.exports = new FilterFactory();
+module.exports = new FilterFactory;

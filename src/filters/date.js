@@ -1,4 +1,4 @@
-var Filter = require('../filter');
+var Filter = require('../Filter');
 var moment = require('moment');
 
 Filter.extend('fromNow', function(value,data) {

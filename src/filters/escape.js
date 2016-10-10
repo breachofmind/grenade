@@ -1,4 +1,4 @@
-var Filter = require('../filter');
+var Filter = require('../Filter');
 
 /**
  * Escapes the value, to prevent XSS.

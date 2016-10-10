@@ -1,4 +1,4 @@
-var Filter = require('../filter');
+var Filter = require('../Filter');
 
 Filter.extend('toUpper', function(value,data) {
     return value.toUpperCase();

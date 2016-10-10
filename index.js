@@ -1,10 +1,10 @@
 "use strict";
 
-var Compiler = require('./src/compiler');
-var Template = require('./src/template');
-var Filter   = require('./src/filter');
-var Tag      = require('./src/tag');
-var utils    = require('./src/utils');
+var Compiler = require('./src/Compiler');
+var Template = require('./src/Template');
+var Filter   = require('./src/Filter');
+var Tag      = require('./src/Tag');
+var utils    = require('./src/support/utils');
 
 require('./src/filters/escape');
 require('./src/filters/class');
@@ -28,6 +28,7 @@ require('./src/tags/date');
 require('./src/tags/show');
 require('./src/tags/with');
 require('./src/tags/options');
+require('./src/tags/component');
 
 exports.Compiler = Compiler;
 exports.Template = Template;

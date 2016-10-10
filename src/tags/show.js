@@ -1,7 +1,7 @@
 "use strict";
 
-var Tag = require('../tag');
-var utils = require('../utils');
+var Tag = require('../Tag');
+var utils = require('../support/utils');
 
 Tag.extend('show', {
     passArguments: true,
