@@ -37,6 +37,8 @@ module.exports = {
         return index;
     },
 
+    noop: function() {},
+
     /**
      * Rethrow any exceptions from rendering.
      * @param error object

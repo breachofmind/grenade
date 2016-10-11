@@ -154,11 +154,15 @@ class Template
 
         source = outsrc.join("\n");
 
-        if (this.isRoot) source = `
-        ${source}
-        return $$.q.each(__out, function(result) {
-            return result;
-        }).then(function(output) { return output.join("").trim(""); })`;
+        if (this.isRoot) {
+            var asString = `return __out.join("").trim("");`;
+            var asPromise = `
+            return $$.q.each(__out, function(result) {
+                return result;
+            }).then(function(__out) { ${asString} });`;
+            source = this.compiler.promises ? `${source} ${asPromise}` : `${source} ${asString}`;
+            source = `try { ${source} } catch(e) { return $$.rethrow(e,__out.join("")); }`;
+        }
 
         return source;
     }

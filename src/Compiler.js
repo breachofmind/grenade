@@ -31,6 +31,13 @@ class Compiler
         this.prettyPrint = false;
 
         /**
+         * Should we use promises?
+         * Making false could vastly speed up rendering.
+         * @type {boolean}
+         */
+        this.promises = true;
+
+        /**
          * Pretty print options, for JS beautify.
          * @type {{}}
          */
@@ -190,9 +197,9 @@ class Compiler
             var output = template.render(data);
 
             if (this.prettyPrint) {
-                return output.then((results) => {
+                return this.promises ? output.then((results) => {
                     return beautify(results, this.prettyPrintOptions)
-                });
+                }) : beautify(output, this.prettyPrintOptions);
             }
             return output;
 

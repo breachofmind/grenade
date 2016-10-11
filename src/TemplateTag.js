@@ -2,6 +2,7 @@
 
 var grenade = require('grenade');
 var utils   = require('./support/utils');
+var noop    = utils.noop;
 var append  = utils.append;
 var YAML    = require('yamljs');
 var Promise = require('bluebird');
@@ -81,6 +82,10 @@ class TemplateTag
             throw (`Tag @${this.type} does not have a render() method`);
         }
         if (args) this.args = args;
+
+        if (! this.template.compiler.promises) {
+            return this.tag.render.apply(this, [data,noop,noop])
+        }
 
         return new Promise(function(resolve,reject)
         {

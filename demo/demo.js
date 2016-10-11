@@ -4,6 +4,7 @@ var opts = {
     extension: "htm",
     rootPath: __dirname + "/views/",
     prettyPrint: true,
+    promises: true,
     //delimiter: grenade.utils.DELIM_HANDLEBARS
 };
 
@@ -33,7 +34,10 @@ var data = {
 
 grenade.load('simple',opts, function(err,template) {
 
-    template(data).then(function(result) {
-        console.log(result);
-    })
+    if (opts.promises) {
+        return template(data).then(result => {
+            console.log(result);
+        })
+    }
+    console.log(template(data));
 });
