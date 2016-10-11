@@ -31,7 +31,9 @@ var data = {
     html: "<div class='html'>My Html</div>"
 };
 
-grenade.load('with',opts, function(err,template) {
+grenade.load('simple',opts, function(err,template) {
 
-    console.log(template(data));
+    template(data).then(function(result) {
+        console.log(result);
+    })
 });

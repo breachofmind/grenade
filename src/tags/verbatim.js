@@ -2,12 +2,13 @@
 
 var Tag = require('../Tag');
 var utils = require('../support/utils');
+var append = utils.append;
 
 Tag.extend('verbatim', {
     block:true,
     evaluate: function(template)
     {
         // Echo the scope inputs.
-        this.setSource("__out += "+JSON.stringify(this.scope.input));
+        this.setSource(append(JSON.stringify(this.scope.input)));
     }
 });

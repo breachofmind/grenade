@@ -45,65 +45,126 @@ describe('basic strings', function()
 
     it('should return empty string if given empty string', function(){
         var template = compiler.compile(EMPTY);
-        expect( template({}) ).to.equal(EMPTY);
-        expect( template() ).to.equal(EMPTY);
-        expect( template(sample) ).to.equal(EMPTY);
+        template()
+            .then((result)=>{ expect(result).to.equal(EMPTY) });
+        template({})
+            .then((result)=>{ expect(result).to.equal(EMPTY) });
+        template(sample)
+            .then((result)=>{ expect(result).to.equal(EMPTY) });
     });
 
     it('should return same string if no tags are present', function(){
-        var template = compiler.compile('just a string');
-        expect( template() ).to.equal('just a string');
-        expect( template({}) ).to.equal('just a string');
-        expect( template(sample) ).to.equal('just a string');
+        var string = "just a string";
+        var template = compiler.compile(string);
+        template()
+            .then((result)=>{ expect(result).to.equal(string) });
+        template({})
+            .then((result)=>{ expect(result).to.equal(string) });
+        template(sample)
+            .then((result)=>{ expect(result).to.equal(string) });
     })
 });
 
 describe('variables', function()
 {
 
-    it('should resolve escaped variable, non-html', function(){
+    it('should resolve escaped variable, non-html', function(done)
+    {
         var string = sample.test;
-        expect(compile("${data.test}")).to.equal(string);
-        expect(compile("${ data.test }")).to.equal(string);
-        expect(compile("${data.test  }  ")).to.equal(string);
-        expect(compile("${data.test}${data.comment}")).to.equal(sample.test + sample.comment);
-        expect(compile("${data.test} ${data.comment}")).to.equal(sample.test + " " +sample.comment);
+        var promises = [
+            compile("${data.test}"),
+            compile("${ data.test }"),
+            compile("${data.test  }  ")
+        ];
+        var check = result => { return expect(result).to.equal(string) };
+        testkit.map(promises, check, done);
     });
-    it('should resolve raw variable, non-html', function(){
+
+    it('should resolve escaped variable, non-html, multiple', function(done)
+    {
+        var promises = [
+            compile("${data.test}${data.comment}"),
+        ];
+        var check = result => { expect(result).to.equal(sample.test + sample.comment) };
+        testkit.map(promises,check,done);
+    });
+
+    it('should resolve raw variable, non-html', function(done)
+    {
         var string = sample.test;
-        expect(compile("${=data.test}")).to.equal(string);
-        expect(compile("${ =data.test }")).to.equal(string);
-        expect(compile("${ = data.test  }  ")).to.equal(string);
+        var promises = [
+            compile("${=data.test}"),
+            compile("${ =data.test }"),
+            compile("${ = data.test  }  ")
+        ];
+        var check = result => { expect(result).to.equal(string); };
+        testkit.map(promises,check,done);
     });
-    it('should resolve escaped variable html', function(){
+
+    it('should resolve escaped variable html', function(done)
+    {
         var string = grenade.Filter.apply('escape', sample.html);
-        expect(compile("${data.html}")).to.equal(string);
-        expect(compile("${ data.html }")).to.equal(string);
-        expect(compile("${ data.html }  ")).to.equal(string);
+        var promises = [
+            compile("${data.html}"),
+            compile("${ data.html }"),
+            compile("${  data.html  }  ")
+        ];
+        var check = result => { expect(result).to.equal(string); };
+        testkit.map(promises,check,done);
     });
-    it('should resolve raw variable html', function(){
+
+    it('should resolve raw variable html', function(done)
+    {
         var string = sample.html;
-        expect(compile("${=data.html}")).to.equal(string);
-        expect(compile("${=data.html }")).to.equal(string);
-        expect(compile("${ = data.html }")).to.equal(string);
-        expect(compile("${ =  data.html   } ")).to.equal(string);
+        var promises = [
+            compile("${=data.html}"),
+            compile("${=data.html }"),
+            compile("${ = data.html }"),
+            compile("${ =  data.html   } ")
+        ];
+        var check = result => { expect(result).to.equal(string); };
+        testkit.map(promises,check,done);
     });
-    it('should resolve comment as empty string', function(){
-        expect(compile("${#data.comment}")).to.equal(EMPTY);
-        expect(compile("${#This is a comment}")).to.equal(EMPTY);
-        expect(compile("${#  This is a comment }")).to.equal(EMPTY);
-        expect(compile("${  # This is a comment }  ")).to.equal(EMPTY);
+
+    it('should resolve comment as empty string', function(done)
+    {
+        var promises = [
+            compile("${#data.comment}"),
+            compile("${#This is a comment}"),
+            compile("${#  This is a comment }"),
+            compile("${  # This is a comment }  ")
+        ];
+        var check = result => { expect(result).to.equal(EMPTY); };
+        testkit.map(promises,check,done);
     });
-    it('should return numbers as a string, including zero', function(){
-        expect(compile("${data.zero}${data.one}")).to.equal("01");
+
+    it('should return numbers as a string, including zero', function(done)
+    {
+        compile("${data.zero}${data.one}")
+            .then((result) => {
+                expect(result).to.equal("01");
+            })
+            .catch(e => { return e;}).then(e => { done(e) })
     })
 });
 
-describe('functions', function(){
-    it('should call a function', function(){
-        expect(compile("${data.func()}")).to.equal("called");
+describe('functions', function()
+{
+    it('should call a function', function(done)
+    {
+        compile("${data.func()}")
+            .then((result) => {
+                expect(result).to.equal("called");
+            })
+            .catch(e => { return e;}).then(e => { done(e) })
     });
-    it('should call a function with arguments', function(){
-        expect(compile("${data.add(1,2)}")).to.equal("3");
+
+    it('should call a function with arguments', function(done)
+    {
+        compile("${data.add(1,2)}")
+            .then((result) => {
+                expect(result).to.equal("3");
+            })
+            .catch(e => { return e;}).then(e => { done(e) })
     })
 });

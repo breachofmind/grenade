@@ -189,7 +189,12 @@ class Compiler
         {
             var output = template.render(data);
 
-            return this.prettyPrint ? beautify(output,this.prettyPrintOptions) : output;
+            if (this.prettyPrint) {
+                return output.then((results) => {
+                    return beautify(results, this.prettyPrintOptions)
+                });
+            }
+            return output;
 
         }.bind(this);
     }

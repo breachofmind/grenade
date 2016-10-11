@@ -1,0 +1,32 @@
+@extends(layouts/master)
+
+@section(body)
+
+    @component(example)
+        name: "My Name"
+    @endcomponent
+
+    <h1 class="${?name:true, noname:false}">Grenade Demo</h1>
+
+    @if(true)
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Amet ea est et facere ipsam quo repellendus, sapiente. Consequuntur, eligendi, iste?</p>
+    @endif
+
+@endsection
+
+
+@section(footer)
+
+    <ul>
+    @foreach([key,item] in data.items)
+        <li>${key} ${item.name}</li>
+    @endforeach
+    </ul>
+
+    <ul class="footer-menu">
+        <li>Menu 1</li>
+        <li>Menu 2</li>
+        <li>Menu 3</li>
+    </ul>
+
+@endsection

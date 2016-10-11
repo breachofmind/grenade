@@ -78,7 +78,12 @@ module.exports = {
      */
     append: function(what)
     {
-        return "__out += " + what + ";";
+        return `__out.push(${what});`;
+    },
+
+    resolve: function(what)
+    {
+        return `__out.push( new Promise(resolve,reject) { try { ${what} } catch(e) { reject(e) } })`;
     },
 
     CompileError: CompileError

@@ -6,13 +6,12 @@ var moment = require('moment');
 
 Tag.extend('date', {
     passArguments: true,
-    render: function(data,args,template)
+    render: function(data)
     {
-        if (typeof args == 'string') {
-            return moment().format(args);
-        } else if(Array.isArray(args)) {
-            return moment(args[0]).format(args[1]);
+        if (typeof this.args == 'string') {
+            return moment().format(this.args);
+        } else if(Array.isArray(this.args)) {
+            return moment(this.args[0]).format(this.args[1]);
         }
-
     }
 });

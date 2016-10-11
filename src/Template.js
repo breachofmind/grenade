@@ -8,6 +8,7 @@ var Filter      = require('./Filter');
 var Parser      = require('./Parser');
 var rethrow     = utils.rethrow;
 var append      = utils.append;
+var Promise     = require('bluebird');
 
 class Template
 {
@@ -36,19 +37,7 @@ class Template
         this.source     = this.getSource();
 
         // The compiled source function.
-        if (this.isRoot)
-        {
-            this.fn = new Function(`${this.compiler.localsName},__val,__tag,rethrow,__out`, `
-                try {
-                    ${this.source}
-                } catch(e) {
-                    return rethrow(e,__out);
-                }
-
-                return __out.trim();
-        `);
-        }
-
+        if (this.isRoot) this.fn = new Function(`${this.compiler.localsName}, __out, $$`, this.source);
     }
 
     /**
@@ -143,15 +132,37 @@ class Template
      */
     getSource()
     {
-        return this.output.map(function(line)
-        {
-            if (typeof line == "string") {
-                return append(JSON.stringify(line));
-            }
-            return line.source;
+        var outsrc = [],
+            source;
 
-        }).join("\n");
+        for (let i = 0, len = this.output.length; i < len; i++)
+        {
+            var line = this.output[i];
+
+            // Combine lines of strings into a single index.
+            if (typeof line == "string") {
+                var concat = line;
+                while (typeof this.output[i+1] == "string") {
+                    i++;
+                    concat += this.output[i];
+                }
+                outsrc.push( append(JSON.stringify(concat)) );
+                continue;
+            }
+            outsrc.push(line.source);
+        }
+
+        source = outsrc.join("\n");
+
+        if (this.isRoot) source = `
+        ${source}
+        return $$.q.each(__out, function(result) {
+            return result;
+        }).then(function(output) { return output.join("").trim(""); })`;
+
+        return source;
     }
+
 
     /**
      * Render the compiled javascript.
@@ -160,7 +171,12 @@ class Template
      */
     render(data)
     {
-        return this.fn(data, Filter.functions(), this._tagIndex, rethrow, "");
+        return this.fn(data, [], {
+            rethrow: rethrow,
+            tag:     this._tagIndex,
+            val:     Filter.functions(),
+            q:       Promise,
+        });
     }
 }
 

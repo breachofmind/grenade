@@ -1,6 +1,8 @@
 "use strict";
 
 var Filter = require('./Filter');
+var utils = require('./support/utils');
+var append = utils.append;
 
 /**
  * A variable in a template.
@@ -62,11 +64,11 @@ class TemplateVar
      */
     getSource()
     {
-        var src = `__out += ${this.text};`;
+        var src = append(this.text);
 
         if (this.filters.length) {
             var filters = JSON.stringify(this.filters);
-            src = `__out += __val(${this.text},${this.template.compiler.localsName},${filters});`;
+            src = append(`$$.val(${this.text},${this.template.compiler.localsName},${filters})`);
         }
         return src;
     }

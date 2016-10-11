@@ -1,3 +1,4 @@
+var Promise     = require('bluebird');
 GLOBAL.chai     = require('chai');
 GLOBAL.expect   = chai.expect;
 GLOBAL.should   = chai.should();
@@ -36,4 +37,11 @@ exports.sampleData = {
 exports.compile = function (string,data) {
     if (!data) data = exports.sampleData;
     return exports.compiler.compile(string)(data);
+};
+
+exports.map = function(array,callback,done) {
+    var called = false;
+    Promise.each(array, callback)
+        .catch(e => { done(e); called = true; })
+        .finally(() => { if(!called) done(); })
 };

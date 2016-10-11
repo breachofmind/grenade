@@ -4,6 +4,7 @@ var grenade = require('grenade');
 var utils   = require('./support/utils');
 var append  = utils.append;
 var YAML    = require('yamljs');
+var Promise = require('bluebird');
 
 /**
  * A tag in a template.
@@ -62,8 +63,8 @@ class TemplateTag
 
             // Use the default source for rendering.
             if (! this.source && this.tag.render) {
-                var passArgs = this.tag.passArguments ? `,${this.args}` : ",null";
-                this.setSource(append(`__tag["${this.key}"].render(${this.template.compiler.localsName}${passArgs})`));
+                var passArgs = this.tag.passArguments ? this.args : "null";
+                this.setSource(append(`$$.tag["${this.key}"].render(${this.template.compiler.localsName},${passArgs})`));
             }
         }
     }
@@ -72,14 +73,22 @@ class TemplateTag
      * Call the tag render method.
      * @param data object
      * @param args mixed
-     * @returns {string}
+     * @returns {Promise}
      */
     render(data,args)
     {
         if (! this.tag.render) {
             throw (`Tag @${this.type} does not have a render() method`);
         }
-        return this.tag.render.call(this,data,args,this.template);
+        if (args) this.args = args;
+
+        return new Promise(function(resolve,reject)
+        {
+            var val = this.tag.render.apply(this, [data,resolve,reject]);
+            if (typeof val == 'string') {
+                return resolve(val);
+            }
+        }.bind(this));
     }
 
     /**

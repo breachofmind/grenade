@@ -11,6 +11,10 @@ Tag.extend('component', {
     },
     evaluate: function(template)
     {
-        this.replaceWith (template.compiler.make(this.args, template));
+        this.scope = template.compiler.make(this.args, template);
+    },
+    render: function(data,done)
+    {
+        return "TESTING";
     }
 });
