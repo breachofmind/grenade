@@ -1,10 +1,11 @@
 "use strict";
 
-var Compiler = require('./src/Compiler');
-var Template = require('./src/Template');
-var Filter   = require('./src/Filter');
-var Tag      = require('./src/Tag');
-var utils    = require('./src/support/utils');
+var Compiler  = require('./src/Compiler');
+var Template  = require('./src/Template');
+var Component = require('./src/Component');
+var Filter    = require('./src/Filter');
+var Tag       = require('./src/Tag');
+var utils     = require('./src/support/utils');
 
 require('./src/filters/escape');
 require('./src/filters/class');
@@ -30,11 +31,12 @@ require('./src/tags/with');
 require('./src/tags/options');
 require('./src/tags/component');
 
-exports.Compiler = Compiler;
-exports.Template = Template;
-exports.Filter   = Filter;
-exports.Tag      = Tag;
-exports.utils    = utils;
+exports.Component = Component;
+exports.Compiler  = Compiler;
+exports.Template  = Template;
+exports.Filter    = Filter;
+exports.Tag       = Tag;
+exports.utils     = utils;
 
 /**
  * Load a file and return a rendering function.

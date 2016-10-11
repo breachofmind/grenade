@@ -9,7 +9,7 @@ class Tag
     {
         this.name = name;
         this.block = opts.block || false;
-        this.yaml = opts.yaml || false;
+        this.isolate = opts.isolate || false;
         this.hasArguments = opts.hasArguments || true;
         this.passArguments = opts.passArguments || false;
 
@@ -32,8 +32,6 @@ class Tag
          * @returns {string}
          */
         this.render = opts.render || null;
-
-        if (this.yaml) this.block = true;
     }
 }
 

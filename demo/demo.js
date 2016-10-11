@@ -5,6 +5,7 @@ var opts = {
     rootPath: __dirname + "/views/",
     prettyPrint: true,
     promises: true,
+    componentPath: __dirname + "/components/"
     //delimiter: grenade.utils.DELIM_HANDLEBARS
 };
 
@@ -23,6 +24,11 @@ var data = {
         {name: "Item 1", numbers: [1,2,3]},
         {name: "Item 2", numbers: [4,5,6]},
         {name: "Item 3", numbers: [7,8,9]}
+    ],
+    people: [
+        {name: "Mike", id:1, color:"red"},
+        {name: "Liam", id:2, color:"green"},
+        {name: "Ash", id:3, color:"blue"},
     ],
     hash: {
         id123: "ID 1",

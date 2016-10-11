@@ -10,8 +10,7 @@ var rethrow     = utils.rethrow;
 var append      = utils.append;
 var Promise     = require('bluebird');
 
-class Template
-{
+class Template {
     /**
      * Template constructor.
      * @param input string
@@ -20,21 +19,21 @@ class Template
      */
     constructor(input, parent, scope)
     {
-        this.input      = input;
-        this.parent     = parent || null;
-        this.compiler   = this.isRoot ? scope : this.parent.compiler;
-        this.scope      = this.isRoot ? null  : scope;
-        this.parser     = new Parser(this);
+        this.input = input;
+        this.parent = parent || null;
+        this.compiler = this.isRoot ? scope : this.parent.compiler;
+        this.scope = this.isRoot ? null : scope;
+        this.parser = new Parser(this);
 
         if (this.isRoot) {
             this._tagIndex = {};
             this._n = 0;
         }
 
-        this.id         = this.isRoot ? 0 : this.root._n ++;
-        this.tags       = this.parser.parseTags(this.input);
-        this.output     = this.setOutput();
-        this.source     = this.getSource();
+        this.id = this.isRoot ? 0 : this.root._n++;
+        this.tags = this.parser.parseTags(this.input);
+        this.output = this.setOutput();
+        this.source = this.getSource();
 
         // The compiled source function.
         if (this.isRoot) this.fn = new Function(`${this.compiler.localsName}, __out, $$`, this.source);
@@ -49,7 +48,7 @@ class Template
         if (this.isRoot) return this;
 
         var parent = this.parent;
-        while (! parent.isRoot) {
+        while (!parent.isRoot) {
             parent = parent.parent;
         }
         return parent;
@@ -73,8 +72,8 @@ class Template
     {
         this.output = [];
 
-        if (! this.tags.length) {
-           return this.output = this.output.concat(this.parser.parseVars(this.input));
+        if (!this.tags.length) {
+            return this.output = this.output.concat(this.parser.parseVars(this.input));
         }
 
         var index = 0;
@@ -113,8 +112,9 @@ class Template
     flatten()
     {
         var out = [];
-        this.output.forEach(function(output) {
-            if (! output || output == "") {
+        this.output.forEach(function (output)
+        {
+            if (!output || output == "") {
                 return;
             }
             if (output instanceof TemplateTag || output instanceof Template || output instanceof TemplateVar) {
@@ -135,18 +135,17 @@ class Template
         var outsrc = [],
             source;
 
-        for (let i = 0, len = this.output.length; i < len; i++)
-        {
+        for (let i = 0, len = this.output.length; i < len; i++) {
             var line = this.output[i];
 
             // Combine lines of strings into a single index.
             if (typeof line == "string") {
                 var concat = line;
-                while (typeof this.output[i+1] == "string") {
+                while (typeof this.output[i + 1] == "string") {
                     i++;
                     concat += this.output[i];
                 }
-                outsrc.push( append(JSON.stringify(concat)) );
+                outsrc.push(append(JSON.stringify(concat)));
                 continue;
             }
             outsrc.push(line.source);
@@ -154,19 +153,42 @@ class Template
 
         source = outsrc.join("\n");
 
-        if (this.isRoot) {
-            var asString = `return __out.join("").trim("");`;
-            var asPromise = `
-            return $$.q.each(__out, function(result) {
-                return result;
-            }).then(function(__out) { ${asString} });`;
-            source = this.compiler.promises ? `${source} ${asPromise}` : `${source} ${asString}`;
-            source = `try { ${source} } catch(e) { return $$.rethrow(e,__out.join("")); }`;
-        }
+        if (this.isRoot) source = this._getSourceOption(source);
 
         return source;
     }
 
+    /**
+     * Return the string source based on promise or non-promise output.
+     * @param source string
+     * @returns {string}
+     * @private
+     */
+    _getSourceOption(source)
+    {
+        var out = "__out.join('').trim('')";
+
+        // Promise-based output.
+        if (this.compiler.promises) {
+            return `
+            ${source}
+            return $$.q.each(__out, function(result) { return result; })
+                .error(function(e) { return $$.rethrow(e, ${out}); })
+                .then(function(__out) { return ${out} });
+            `;
+        }
+        // Non-promise output.
+        return `
+        try {
+            ${source}
+            return ${out};
+        } catch(e) { 
+            return $$.rethrow(e,${out}) 
+        }
+        
+        `;
+    }
+    
 
     /**
      * Render the compiled javascript.

@@ -4,7 +4,6 @@ var grenade = require('grenade');
 var utils   = require('./support/utils');
 var noop    = utils.noop;
 var append  = utils.append;
-var YAML    = require('yamljs');
 var Promise = require('bluebird');
 
 /**
@@ -30,11 +29,9 @@ class TemplateTag
         this.data       = null;
 
         if (this.tag.block) {
-            if (this.tag.yaml) {
-                this.data = YAML.parse(`${match.scope}`);
-            } else {
-                this.scope = new grenade.Template(match.scope, template, this);
-            }
+            this.scope = this.tag.isolate
+                ? new grenade.Template(match.scope, null, template.compiler)
+                : new grenade.Template(match.scope, template, this);
         }
 
         if (this.tag.hasArguments) {
@@ -64,7 +61,7 @@ class TemplateTag
 
             // Use the default source for rendering.
             if (! this.source && this.tag.render) {
-                var passArgs = this.tag.passArguments ? this.args : "null";
+                var passArgs = this.tag.passArguments ? this.args.toString() : "null";
                 this.setSource(append(`$$.tag["${this.key}"].render(${this.template.compiler.localsName},${passArgs})`));
             }
         }
@@ -84,7 +81,11 @@ class TemplateTag
         if (args) this.args = args;
 
         if (! this.template.compiler.promises) {
-            return this.tag.render.apply(this, [data,noop,noop])
+            return this.tag.render.apply(this, [
+                data,
+                function(result) { return result; },
+                function(error)  { throw new Error(error); }
+            ]);
         }
 
         return new Promise(function(resolve,reject)
@@ -105,7 +106,7 @@ class TemplateTag
     {
         var root = this.template.root;
         var len = Object.keys(root._tagIndex).length;
-        this.key = `\$${this.template.id}\$${len}`;
+        this.key = `${this.type}\$${this.template.id}\$${len}`;
         root._tagIndex[this.key] = this;
 
         return this.key;

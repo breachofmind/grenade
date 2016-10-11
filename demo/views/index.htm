@@ -2,69 +2,72 @@
 
 @section(body)
 
-@include(partials/object)
-${#Comment#}
+    @include(partials/object)
+    ${#Comment#}
 
-<div class="@show(positive:true, negative:false)"></div>
-${data.date | fromNow}
-@push(stack)
-@date([data.date,"MMM Do YY"])
+    <div class="@show(positive:true, negative:false)"></div>
 
-<p>STACK1</p>
-@endpush
+    ${data.date | fromNow}
 
-<h1 class="${?name:true, noname:false}">Grenade Demo</h1>
+    @push(stack)
+        @date([data.date,"MMM Do YY"])
+        <p>STACK1</p>
+    @endpush
 
-    @if(false)
-        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Amet ea est et facere ipsam quo repellendus, sapiente. Consequuntur, eligendi, iste?</p>
-    @elseif(true)
-        <p>Else!</p>
-    @else
-        <p>End</p>
-    @endif
+    <h1 class="${?name:true, noname:false}">Grenade Demo</h1>
 
-${data.html}
-${=data.html}
-${=data.html | escape}
+        @if(false)
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Amet ea est et facere ipsam quo repellendus, sapiente. Consequuntur, eligendi, iste?</p>
+        @elseif(true)
+            <p>Else!</p>
+        @else
+            <p>End</p>
+        @endif
+
+    ${data.html}
+    ${=data.html}
+    ${=data.html | escape}
+
+    @component(ExampleComponent, {index: "Name"})
 
 @endsection
 
 @section(footer)
 
-@push(stack)
-<p>STACK ${data.title}</p>
-@endpush
+    @push(stack)
+    <p>STACK ${data.title}</p>
+    @endpush
 
-@verbatim
-    @if(true)
-        <h1 class="">Hello</h1>
-    @endif
-@endverbatim
+    @verbatim
+        @if(true)
+            <h1 class="">Hello</h1>
+        @endif
+    @endverbatim
 
-<ul>
-@foreach([key,item] in data.items)
-    <li>${key} ${item.name}</li>
-@endforeach
-</ul>
-
-<ul>
-    @foreach([key,item] in data.hash)
-    <li>${key} ${item}</li>
+    <ul>
+    @foreach([key,item] in data.items)
+        <li>${key} ${item.name}</li>
     @endforeach
-</ul>
+    </ul>
 
-<h3>Number</h3>
-@for(n=1; n<5; n++)
-<p>${n}</p>
-@endfor
+    <ul>
+        @foreach([key,item] in data.hash)
+        <li>${key} ${item}</li>
+        @endforeach
+    </ul>
 
-<ul class="footer-menu">
-    <li>Menu 1</li>
-    <li>Menu 2</li>
-    <li>Menu 3</li>
-</ul>
+    <h3>Number</h3>
+    @for(n=1; n<5; n++)
+    <p>${n}</p>
+    @endfor
 
-@stack(stack)
+    <ul class="footer-menu">
+        <li>Menu 1</li>
+        <li>Menu 2</li>
+        <li>Menu 3</li>
+    </ul>
+
+    @stack(stack)
 
 @endsection
 

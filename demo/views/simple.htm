@@ -2,10 +2,6 @@
 
 @section(body)
 
-    @component(example)
-        name: "My Name"
-    @endcomponent
-
     <h1 class="${?name:true, noname:false}">Grenade Demo</h1>
 
     @if(true)
@@ -17,11 +13,10 @@
 
 @section(footer)
 
-    <ul>
-    @foreach([key,item] in data.items)
-        <li>${key} ${item.name}</li>
+    @foreach(person in data.people)
+        @component(PersonComponent, person)
     @endforeach
-    </ul>
+
 
     <ul class="footer-menu">
         <li>Menu 1</li>

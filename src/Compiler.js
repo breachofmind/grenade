@@ -18,6 +18,8 @@ class Compiler
          */
         this.rootPath = "./";
 
+        this.componentPath = './components';
+
         /**
          * The file extension.
          * @type {string}
@@ -104,6 +106,7 @@ class Compiler
             }
         }.bind(this));
         this.rootPath = path.normalize(this.rootPath);
+        this.componentPath = path.normalize(this.componentPath);
 
         return this;
     }

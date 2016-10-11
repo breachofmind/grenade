@@ -30,7 +30,7 @@ class TemplateVar
         // Parse the incoming variable text.
         if (this.text.indexOf(" | ") > -1) {
             var parts = this.text.split("|",2);
-            filters = parts[1].split(",");
+            filters = parts[1].split(/\,\s*/g);
             this.text = parts[0].trim();
         }
 
@@ -65,10 +65,11 @@ class TemplateVar
     getSource()
     {
         var src = append(this.text);
+        var locals = this.template.compiler.localsName;
 
         if (this.filters.length) {
             var filters = JSON.stringify(this.filters);
-            src = append(`$$.val(${this.text},${this.template.compiler.localsName},${filters})`);
+            src = append(`$$.val(${this.text}, ${locals}, ${filters})`);
         }
         return src;
     }
