@@ -50,7 +50,6 @@ class Component
     render(data)
     {
         this.merge(data);
-
         return this.scope.render(this.data);
     }
 }

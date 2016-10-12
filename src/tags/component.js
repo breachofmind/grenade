@@ -3,6 +3,7 @@
 var Tag     = require('../Tag');
 var grenade = require('grenade');
 var utils   = require('../support/utils');
+var Promise = require('bluebird');
 var _       = require("lodash");
 
 Tag.extend('component', {
@@ -61,13 +62,11 @@ Tag.extend('component', {
         // The parent data object is available via the $parent property.
         data = {$parent:data};
 
-        if (this.template.compiler.promises) {
+        var out = this.component.render(data);
 
-            return this.component.render(data).then(result => {
-                done(result);
-            });
+        if (out instanceof Promise) {
+            return out.then(result => { return done(result) });
         }
-
-        return this.component.render(data);
+        return done(out);
     }
 });

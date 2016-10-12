@@ -30,6 +30,7 @@ require('./src/tags/show');
 require('./src/tags/with');
 require('./src/tags/options');
 require('./src/tags/component');
+require('./src/tags/set');
 
 exports.Component = Component;
 exports.Compiler  = Compiler;
@@ -70,6 +71,9 @@ exports.express = function(app, opts)
             if (err) {
                 return done(new Error(err), null);
             }
+            if (compiler.promises) {
+                return template(options).then(results => { done(null, results) });
+            }
             return done(null,template(options));
         })
     };
@@ -79,10 +83,9 @@ exports.express = function(app, opts)
 
 /**
  * Expressway provider.
- * @param opts object
  * @returns {*}
  */
-exports.provider = function(opts)
+exports.provider = function()
 {
-    return require('./src/support/provider')(exports,opts);
+    return require('./src/support/provider');
 };
