@@ -30,6 +30,7 @@ require('./src/tags/show');
 require('./src/tags/with');
 require('./src/tags/options');
 require('./src/tags/component');
+require('./src/tags/block');
 require('./src/tags/set');
 
 exports.Component = Component;

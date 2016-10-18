@@ -4,6 +4,13 @@
 
     <h1 class="${?name:true, noname:false}">Grenade Demo</h1>
 
+    @block(FormComponent, {method:"post"})
+        <label for="Input">Label</label>
+        <input type="text" placeholder="${data.title}">
+    @endblock
+
+
+
     @set(title = "Neato")
 
     @if(true)

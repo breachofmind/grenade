@@ -40,13 +40,14 @@ Tag.extend('component', {
     {
         var Component = require(template.compiler.componentPath + this.args.name);
         var instance  = new Component (this);
+        var compiler  = template.compiler;
 
         if (! (instance instanceof grenade.Component)) {
             throw new Error(`"${this.args.name}" not a Component instance`);
         }
         // Isolated scope for the Template.
         // This means it is a 'root' Template.
-        instance.scope = template.compiler.make(instance.view, null, template.compiler);
+        instance.scope = instance.view ? compiler.make(instance.view, null, compiler) : compiler.template(instance.template, null);
         this.component = instance;
     },
 

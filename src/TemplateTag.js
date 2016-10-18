@@ -61,8 +61,12 @@ class TemplateTag
 
             // Use the default source for rendering.
             if (! this.source && this.tag.render) {
-                var passArgs = this.tag.passArguments ? this.args.toString() : "null";
-                this.setSource(append(`$$.tag["${this.key}"].render(${this.template.compiler.localsName},${passArgs})`));
+
+                var passArgs = this.tag.passArguments
+                    ? this.args.toString()
+                    : "null";
+
+                this.setSource( append(`$$.tag["${this.key}"].render(${this.template.compiler.localsName},${passArgs})`) );
             }
         }
     }
