@@ -1,5 +1,5 @@
 # Grenade
-A template engine for Node and Express, influenced by Taylor Otwell's "Blade" template engine for Laravel.
+A template engine for Node and Express, influenced by Taylor Otwell's ["Blade" template engine](https://laravel.com/docs/5.3/blade#introduction) for Laravel.
 
 ## Why do we need another template engine?
 
@@ -8,50 +8,79 @@ We don't. I just wanted more flexibility with my template engine.
 This was designed to work with the server and supports a number of features:
 
 - Natively supports Layouts.
-- Custom delimiters for variables, if you really want the handlebars delimiters.
 - Escaped variables, raw variables, or custom variable output.
 - Ability to call javascript functions and helpers, like EJS.
 - Ability to extend with custom tags.
-- Ability to write custom filter functions.
-- Plugs into Express easily.
+- Ability to write custom filter functions, like Angular.
+- Plugs easily into Express.
 - Easy to write and read.
 - Ability to precompile templates (coming soon).
-- Can work with Angular or other handlebars engines on the frontend, since delimiters can be changed.
+- Promise-based rendering, necessary for building UI components that rely on data.
+- Use your own delimiters, such as `{{ }}` or `${ }`.
 
 
 ## Installing
 
 ```bash
-npm install breachofmind/grenade --save
+npm install grenade --save
 ```
 
-## Using
+## Usage
 
 ### Compiling from a file:
 
 ```javascript
 var grenade = require('grenade');
 
-var opts = {
+// All the available options.
+var options = {
+
+    // The root view path. Views are loaded relative to this directory.
     rootPath: __dirname+"/views/",
+    
+    // The path of your Component javascript classes.
+    componentPath: __dirname+"/components/",
+    
+    // The file extension.
     extension: 'htm',
-    prettyPrint: true,
-    prettyPrintOptions: {}, Uses js-beautify module.
-    localsName: "data", // Your variables are prepended with this. ie, ${data.varName}
-    delimiters: grenade.utils.DELIM_HANDLEBARS // This is a regex. Change to whatever.
+    
+    // Pretty print the output? Useful for debugging.
+    prettyPrint: false,
+    
+    //Uses js-beautify module.
+    prettyPrintOptions: {}, 
+    
+    // Your variables are prepended with this. ie, ${data.varName}
+    localsName: "data",
+    
+    // Enable template caching? True for production mode.
+    enableCache: false,
+    
+    // Use promises for rendering?
+    // This could make rendering slower, but allows more flexibility.
+    promises: true,
+    
+    // This is a regex. Change to whatever.
+    delimiters: grenade.utils.DELIM_HANDLEBARS
+    //delimiters: grenade.utils.DELIM_JAVASCRIPT
 };
 
 // This will load and compile the file "./views/content.htm";
+grenade.load('content', options, function(err,template) {
 
-grenade.load('content', opts, function(err,template) {
-
-    if (err) throw err;
+    var data = {title: "Hello World"};
     
-    return template(data);
+    // You can do the promise way, or not.
+    if (options.promises) {
+        return template(data).then(result => {
+            console.log(result);
+        })
+    }
+    console.log(template(data));
 });
 ```
 
-### Using with express:
+### Using with Express:
 
 ```javascript
 var grenade = require('grenade');
@@ -59,45 +88,44 @@ var express = require('express');
 
 var app = express();
 
-// "nade" is the extension, so feel free to use something 
-// like "htm" if your IDE doesn't support custom file types.
-// Be sure to specify your views path, since grenade does not use relative paths.
-
+// This will set up the view engine.
 grenade.express(app, {
-    rootPath: 'views',
-    extension: 'nade'  
+    rootPath: './views',
+    extension: 'frag'  
 });
 ```
 
+## Syntax
 
-## Templates
-
-Let's make a simple template that is based on a parent layout.
+Grenade's basic syntax looks very similar to Laravel's [Blade](https://laravel.com/docs/5.3/blade#introduction) syntax.
+Tags are denoted with a `@` and have custom functionality. Variables are wrapped by whichever delimiters you specify.
 
 ```html
-<!-- ./views/index.nade -->
-@extends("layouts/master")
+<!-- ./views/index.frag -->
+@extends(layouts/master)
 
-@section("head")
+@section(head)
     ${#This is a comment. And it's in the head section of my layout.}
     <link rel="stylesheet" href="/styles.css"/>
 @endsection
 
-@section("body")
+@section(body)
+    @include(common/navigation)
+
     <h1>This is in my content section.</h1>
 @endsection
 ```
 
 ```html
-<!-- ./views/layouts/master.nade -->
+<!-- ./views/layouts/master.frag -->
 <!DOCTYPE html>
 <html>
     <head>
-        <title>${title}</title>
-        @yield("head")
+        <title>${=title}</title>
+        @yield(head)
     </head>
     <body>
-        @yield("body")
+        @yield(body)
     </body>
 </html>
 ```
@@ -106,23 +134,23 @@ Let's make a simple template that is based on a parent layout.
 
 By default, variables have the javascript-esque syntax: `${variable}`. You can, however, use other delimiters if you so desire.
 
-- `${variable}` - Escaped value.
-- `${=variable}` - Raw value, good for HTML output.
-- `${#variable}` - Comment. Not processed when rendered.
+- `${ data.variable }` Escaped value.
+- `${= data.variable }` Raw value, good for HTML output.
+- `${# data.variable }` Comment. Not processed when rendered.
 
 ### Functions
 
-Grenade allows you to call functions from your data object, like EJS. They have the variable syntax:
+Grenade allows you to call functions from your data object, like [EJS](https://github.com/tj/ejs):
 
-`${ testing(arg1,arg2,"string") }`
+`${ data.myFunction(arg1,arg2,"string") }`
 
 ### Control structures / Loops
 
 Grenade comes with all the basic control structures, and some cool ones.
 
-#### if/else/else if
+#### @if
 
-Display the contents of the block if the expression is truthy.
+Display the contents of the block if the expression is __truthy__.
 
 ```html
 @if(condition)
@@ -134,9 +162,9 @@ Display the contents of the block if the expression is truthy.
 @endif
 ```
 
-#### unless/else
+#### @unless
 
-Displays the contents of the block if the expression is falsey.
+Displays the contents of the block if the expression is __falsey__.
 
 ```html
 @unless(condition)
@@ -146,73 +174,76 @@ Displays the contents of the block if the expression is falsey.
 @endif
 ```
 
-#### for
+#### @for
 
 Your basic `for` loop, just like javascript.
 
 ```html
 <ul>
-@for(var i=1; i<=items.length; i++)
-    <li>Item ${i}</li>
+@for(var i=0; i<=data.items.length; i++)
+    <li>Item ${ i }</li>
 @endfor
 </ul>
 ```
 
-#### foreach
+#### @foreach
 
-Loop through the given data array.
+Loop through the given data array or hash object.
 
 ```html
 <ul>
 @foreach(item in items)
-    <li>${item}</li>
+    <li>${ item.name }</li>
 @endforeach
 </ul>
 
 <ul>
 @foreach([index,item] in items)
-    <li>${index} : ${item}</li>
+    <li>${ index } : ${ item }</li>
 @endforeach
 </ul>
 ```
 
-#### include
+#### @include
 
-Include a file at the given location.
+Include a file at the given location, relative to the `rootPath`.
 
 ```html
-@include("file/name")
+@include(file/name)
 ```
 
-#### show
+#### @show
 
 Shows the given strings if the expressions are truthy. Useful for creating classes.
 
 ```html
-<li class="@show(first: i==0, last: items.length == i)">Item</li>
+<!-- Markup -->
+<li class="@show(first: true, last: false)">Item</li>
+<!-- Rendered -->
+<li class="first">Item</li>
 ```
 
 This is pretty common, so a prefix filter also works here:
 
 ```html
-<li class="${? first:i==0, last:items.length == i}">Item</li>
+<li class="${? first:true, last:false}">Item</li>
 ```
 
-#### verbatim
+#### @verbatim
 
 Display the contents of the block exactly how it's shown.
 
 ```html
 @verbatim
-    @if
+    @if(false)
     <h1>This whole thing shows up, including the @if.</h1>
     @endif
 @endverbatim
 ```
 
-#### push/stack
+#### @push and @stack
 
-Collects the `@push` scopes and renders them all under the `@stack` name. Useful for adding scripts or CSS links to the document head or footer.
+Collects the `@push` scopes and renders them all under the `@stack` tag. Useful for adding scripts or CSS links to the document head or footer.
 
 ```html
 @stack(links)
@@ -229,6 +260,68 @@ Collects the `@push` scopes and renders them all under the `@stack` name. Useful
 @endpush
 ```
 
+#### @set
+
+Sets a variable. When compiled to plain javascript, it merely sets a `var` by the specified name.
+```html
+@set(name, "Hello World!")
+
+<h1>${=name}</h1>
+```
+
+#### @with
+
+When compiled to plain javascript, uses the `with(object)` syntax.
+```html
+@with(data)
+    <!-- This is actually data.title -->
+    <h1>${= title }</h1>
+@endwith
+```
+
+#### @extends
+
+Extend the current document off of a layout. Any include or component file can use it's own layout.
+Works in conjunction with `@yield` and `@section`.
+
+```html
+<!-- my-component.frag -->
+@extends(layouts/component)
+
+@section(body)
+    <h1>The yield tag is filled in!</h1>
+@endsection
+```
+
+```html
+<!-- layouts/component.frag -->
+<div class="component">
+    @yield(body)
+</div>
+```
+
+#### @component and @block
+
+This is a very special tag that allows you to create custom UI components off of Component classes.
+A component has a javascript class associated with it, which you should define in whatever directory you
+specified in `componentPath`.
+```html
+@component(MyComponent, {title:"Hello"})
+
+<!-- or the shorthand... -->
+@cmp(MyComponent, {title:"Hello"})
+```
+A block is essentially the same as a component, only you can create a 
+"transcluded" template that gets passed to your component.
+```html
+@block(MyComponent, {title:"Hello"})
+    <h1>This HTML gets past to my component class.</h1>
+    <p>I can then print it using ${=data.$block} !!</p>
+@endblock
+```
+
+Building components is worth it's own page, so check out the [docs.]()
+
 ## Filters
 
 Filters are used in much the same way as Angular. They can be defined like so:
@@ -244,24 +337,24 @@ grenade.Filter.extend('bold', function(value,data) {
 });
 ```
 
-And in the markup, they are applied in order (comma-separated)
+In the markup, they are applied in order (comma-separated)
 
 ```html
-<h1>${=title | toUpper,bold}</h1>
-```
+<!-- Markup -->
+<h1>${=data.title | toUpper,bold}</h1>
 
-Yields:
-```html
+<!-- Rendered -->
 <h1></strong>TITLE</strong></h1>
 ```
 
 ### Prefix filters
 
-Sometimes, filters or helpers are done so often, a custom prefix would be nice to have. One good example is using locales:
+Sometimes, filters or helpers are done so often, a custom prefix would be nice to have. 
+One good example is using locales:
 
 ```html
 <!-- Instead of this... -->
-${toLocale(variable)}
+${toLocale(data.variable)}
 ${toLocale("en_us.welcome")}
 
 <!-- Let's do this -->
@@ -275,7 +368,8 @@ grenade.Filter.extend('toLocale', {prefix:">", pushPrefix: false}, function(valu
 });
 ```
 
-__Note__ Prefix filters are applied LAST by default, so be sure to include the `pushPrefix: false` in this case. So, our locale string is modified accordingly by other filters.
+__Note:__ Prefix filters are applied LAST by default, so be sure to include 
+the `pushPrefix: false` in this case. So, our locale string is modified accordingly by other filters.
 
 ```html
 <h1>${>"en_us.welcome" | toUpper,bold}</h1>
@@ -287,7 +381,8 @@ __Note__ Prefix filters are applied LAST by default, so be sure to include the `
 
 ## Creating Custom Tags
 
-Custom tags look like `@tagname(args)`. You can add your own to create custom UI components or control structures.
+Custom tags look like `@tagname(args)`. You can add your own to create 
+custom UI components or control structures.
 
 ```javascript
 var grenade = require('grenade');
@@ -298,32 +393,29 @@ grenade.Tag.extend('role', {
 
     // Declare this tag as a block, 
     // which means it contains a scope and a @endrole tag.
-    
     block: true,
     
     // Parse the tag's arguments.
     // They were passed as a string, so we'll leave them alone.
-    
     parse: function(args) {
         return args;
     },
     
     // Function that will be called 
     // when the template is rendered with data.
-    
-    render(data) {
+    render(data,done) {
     
         // If the user has the role, 
         // show the containing scope.
-        
         if (data.user && data.user.role == this.args) {
-            return this.scope.render(data);
+            return this.scope.render(data).then(function(result) {
+                return done(result);
+            });
         }
         
         // Oh no. Didn't meet our criteria, 
         // so return empty string.
-        
-        return "";
+        return done("");
     }
 })
 ```
@@ -357,16 +449,10 @@ Performance is definitely a concern, so templates are compiled to plain javascri
 
 Benchmark testing has been done with Marko's handsome [Templating benchmark suite](https://github.com/marko-js/templating-benchmarks).
 
-### I hate having to write "data.variable" in my templates
-
-I do too, but you wouldn't believe the performance increase when the `with(data) {...}` is removed from the compiled javascript. Most of the heavy hitters avoid using `with` for performance reasons. 
-
-If you don't care, feel free to fork and add the `with` yourself in `src/template.js`!
-
 ### What's with the name?
 
 Evolution of a name. "Blade-for-node" -> "Node-Blade" -> "Nade" -> "Grenade".
 
 ## Contributing
 
-Let me know if you want to help out!
+Let me know if you want to help out.

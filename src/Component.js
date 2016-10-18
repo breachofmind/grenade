@@ -67,6 +67,32 @@ class Component
     }
 
     /**
+     * Convert the given properties from the data into HTML attributes.
+     * @param properties array
+     * @returns {string}
+     */
+    toAttributes(properties)
+    {
+        return properties.map(prop => {
+
+            // If an object, the key is the prop
+            // and the value is the mapped attribute.
+            var key = typeof prop === 'string' ? prop : Object.keys(prop)[0];
+            var attr = typeof prop === 'string' ? prop : prop[key];
+            var val = this.data[key];
+
+            if (val === null || val === false) {
+                return "";
+            } else if (val === true) {
+                return attr;
+            }
+
+            return `${attr}="${val}"`;
+
+        }).join(" ");
+    }
+
+    /**
      * Merge the given data object with this components data.
      * @param data object
      */
@@ -74,6 +100,13 @@ class Component
     {
         this.data = _.merge(this.data,data);
     }
+
+    /**
+     * Fired just after data has been merged.
+     * Allows developer to manipulate the merged dataset.
+     * @param data
+     */
+    prepare(data) {}
 
     /**
      * Render the component.
@@ -84,6 +117,7 @@ class Component
     {
         if (this.mergeParams) this.merge(this.params);
         this.merge(data);
+        this.prepare(data);
         return this.scope.render(this.data);
     }
 }

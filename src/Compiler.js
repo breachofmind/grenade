@@ -18,6 +18,10 @@ class Compiler
          */
         this.rootPath = "./";
 
+        /**
+         * The component path directory.
+         * @type {string}
+         */
         this.componentPath = './components';
 
         /**

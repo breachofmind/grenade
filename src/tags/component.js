@@ -6,7 +6,7 @@ var utils   = require('../support/utils');
 var Promise = require('bluebird');
 var _       = require("lodash");
 
-Tag.extend('component', {
+var args = {
 
     passArguments: true,
 
@@ -17,17 +17,16 @@ Tag.extend('component', {
      */
     parse: function(args)
     {
-        var moduleName, arr;
-
-        [moduleName, ...arr] = args.split(/\,\s*/g,2);
-
+        var parts = args.split(",");
+        var moduleName = parts.shift().replace(/\./g,"/");
+        var params = parts.join(",").trim();
         return {
             name: moduleName,
-            params: arr,
+            params: params,
 
             // This gets passed to the render method
             // when being eval'ed at runtime.
-            toString: function() { return `{ name:"${moduleName}", params:${arr[0]} }` }
+            toString: function() { return `{ name:"${moduleName}", params:${params} }` }
         }
     },
 
@@ -70,4 +69,7 @@ Tag.extend('component', {
         }
         return done(out);
     }
-});
+};
+
+Tag.extend('component', args);
+Tag.extend('cmp', args);
