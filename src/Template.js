@@ -172,7 +172,7 @@ class Template {
         if (this.compiler.promises) {
             return `
             ${source}
-            return $$.q.each(__out, function(result) { return result; })
+            return $$.q.all(__out, function(result) { return result; })
                 .error(function(e) { return $$.rethrow(e, ${out}); })
                 .then(function(__out) { return ${out} });
             `;
