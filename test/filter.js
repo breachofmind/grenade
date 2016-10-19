@@ -5,17 +5,27 @@ var Filter   = testkit.grenade.Filter;
 
 describe('filters', function(){
 
-    it('should apply a filter', function(){
+    it('should apply a filter', function(done){
         var expected = sample.test.toUpperCase();
-        expect(compile("${data.test | toUpper}")).to.equal(expected);
-        expect(compile("${data.test | toUpper }")).to.equal(expected);
-        expect(compile("${=data.test  | toUpper}")).to.equal(expected);
+
+        var promises = [
+            compile("${data.test | toUpper}"),
+            compile("${data.test | toUpper }"),
+            compile("${=data.test  | toUpper}"),
+        ];
+        var check = result => { expect(result).to.equal(expected); };
+        testkit.map(promises,check,done);
     });
-    it('should apply multiple filters', function(){
+    it('should apply multiple filters', function(done)
+    {
         var expected  = Filter.apply('slug', sample.test).toUpperCase();
-        expect(compile("${data.test | slug,toUpper}")).to.equal(expected);
-        expect(compile("${data.test | slug,toUpper }")).to.equal(expected);
-        expect(compile("${=data.test  | slug,toUpper}")).to.equal(expected);
+        var promises = [
+            compile("${data.test | slug,toUpper}"),
+            compile("${data.test | slug,toUpper }"),
+            compile("${=data.test  | slug,toUpper}"),
+        ];
+        var check = result => { expect(result).to.equal(expected); };
+        testkit.map(promises,check,done);
     });
 
 });

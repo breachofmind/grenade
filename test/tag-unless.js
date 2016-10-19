@@ -8,30 +8,55 @@ const EMPTY = "";
 describe('@unless @else', function(){
 
 
-    it('should return the element if expression is false', function(){
-        expect(compile(_unless("false"))).to.equal('yes');
-        expect(compile(_unless("! true"))).to.equal('yes');
-        expect(compile(_unless("1 === 2"))).to.equal('yes');
-        expect(compile(_unless("1 !== 1"))).to.equal('yes');
-        expect(compile(_unless("'x' == 'z'"))).to.equal('yes');
-        expect(compile(_unless("data.test == data.html"))).to.equal('yes');
+    it('should return the element if expression is false', function(done)
+    {
+        var promises = [
+            compile(_unless("false")),
+            compile(_unless("! true")),
+            compile(_unless("1 === 2")),
+            compile(_unless("1 !== 1")),
+            compile(_unless("'a' == 'z'")),
+            compile(_unless("data.test == data.html")),
+        ];
+        var check = result => { expect(result).to.equal("yes"); };
+        testkit.map(promises,check,done);
     });
-    it('should not return the element if expression is true', function(){
-        expect(compile(_unless("true"))).to.equal(EMPTY);
-        expect(compile(_unless("! false"))).to.equal(EMPTY);
-        expect(compile(_unless("5>1"))).to.equal(EMPTY);
+
+    it('should not return the element if expression is true', function(done)
+    {
+        var promises = [
+            compile(_unless("true")),
+            compile(_unless("! false")),
+            compile(_unless("5>1")),
+        ];
+        var check = result => { expect(result).to.equal(EMPTY); };
+        testkit.map(promises,check,done);
     });
-    it('should return true portion of unless/else if expression is false', function(){
-        expect(compile(_unlesselse("true"))).to.equal('no');
-        expect(compile(_unlesselse("! false"))).to.equal('no');
-        expect(compile(_unlesselse("1 === 1"))).to.equal('no');
-        expect(compile(_unlesselse("1 !== 2"))).to.equal('no');
-        expect(compile(_unlesselse("'x' == 'x'"))).to.equal('no');
+
+    it('should return true portion of unless/else if expression is false', function(done)
+    {
+        var promises = [
+            compile(_unlesselse("true")),
+            compile(_unlesselse("! false")),
+            compile(_unlesselse("1 === 1")),
+            compile(_unlesselse("1 !== 2")),
+            compile(_unlesselse("'x' == 'x'")),
+        ];
+        var check = result => { expect(result).to.equal('no'); };
+        testkit.map(promises,check,done);
     });
-    it('should return false portion of unless/else if expression is true', function(){
-        expect(compile(_unlesselse("false"))).to.equal('yes');
-        expect(compile(_unlesselse("! true"))).to.equal('yes');
-        expect(compile(_unlesselse("1==2"))).to.equal('yes');
+
+    it('should return false portion of unless/else if expression is true', function(done)
+    {
+        var promises = [
+            compile(_unlesselse("false")),
+            compile(_unlesselse("! true")),
+            compile(_unlesselse("1 !== 1")),
+            compile(_unlesselse("1 === 2")),
+            compile(_unlesselse("'a' == 'z'")),
+        ];
+        var check = result => { expect(result).to.equal('yes'); };
+        testkit.map(promises,check,done);
     });
 });
 

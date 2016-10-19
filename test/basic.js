@@ -126,6 +126,15 @@ describe('variables', function()
         testkit.map(promises,check,done);
     });
 
+    it('should resolve to the literal string', function(done)
+    {
+        var promises = [
+            compile("${:data.test}"),
+        ];
+        var check = result => { expect(result).to.equal("${data.test}"); };
+        testkit.map(promises,check,done);
+    });
+
     it('should resolve comment as empty string', function(done)
     {
         var promises = [

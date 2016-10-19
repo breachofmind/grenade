@@ -5,8 +5,14 @@ var sample   = testkit.sampleData;
 
 const EMPTY = "";
 
-describe('@include', function(){
-    it('should include the partial', function(){
-        expect(compile("@include(test/partial)")).to.equal('included');
+describe('@include', function()
+{
+    it('should include the partial', function(done)
+    {
+        var promises = [
+            compile("@include(test/partial)")
+        ];
+        var check = result => { expect(result).to.equal("included"); };
+        testkit.map(promises,check,done);
     })
 });

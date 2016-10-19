@@ -4,27 +4,57 @@ var compile  = testkit.compile;
 var sample   = testkit.sampleData;
 
 const EMPTY = "";
+const WHITESPACE = /\s/g;
 
 describe('@foreach', function()
 {
-    it('should return nothing if empty array given', function(){
-        expect(compile(_foreach("item in data.arr"), {arr:[]})).to.equal(EMPTY);
-        expect(compile(_foreach("item in data.arr"), {})).to.equal(EMPTY);
-        expect(compile(_foreach("[i,item] in data.arr"), {})).to.equal(EMPTY);
+    it('should return nothing if empty array given', function(done)
+    {
+        var promises = [
+            compile(_foreach("item in data.nothing")),
+            compile(_foreach("item in data.arr"), {}),
+            compile(_foreach("[i,item] in data.arr"), {})
+        ];
+        var check = result => { expect(result).to.equal(EMPTY); };
+        testkit.map(promises,check,done);
     });
-    it('should return each value if array given', function(){
-        expect(compile(_foreach("item in data.arr")).replace(/\s/g,"")).to.equal("redgreenblue");
-        expect(compile(_foreach("[i,item] in data.arr")).replace(/\s/g,"")).to.equal("redgreenblue");
+
+    it('should return each value if array given', function(done)
+    {
+        var promises = [
+            compile(_foreach("item in data.arr")),
+            compile(_foreach("[i,item] in data.arr"))
+        ];
+        var check = result => { expect(result.replace(WHITESPACE,EMPTY)).to.equal("redgreenblue"); };
+        testkit.map(promises,check,done);
     });
-    it('should return each value if hash given', function(){
-        expect(compile(_foreach("item in data.hash")).replace(/\s/g,"")).to.equal("k1k2k3");
-        expect(compile(_foreach("[i,item] in data.hash")).replace(/\s/g,"")).to.equal("k1k2k3");
+
+    it('should return each value if hash given', function(done)
+    {
+        var promises = [
+            compile(_foreach("item in data.hash")),
+            compile(_foreach("[i,item] in data.hash"))
+        ];
+        var check = result => { expect(result.replace(WHITESPACE,EMPTY)).to.equal("k1k2k3"); };
+        testkit.map(promises,check,done);
     });
-    it('should return the increment variable', function(){
-        expect(compile(_foreachIncrement("[i,item] in data.arr","i")).replace(/\s/g,"")).to.equal("012");
+
+    it('should return the increment variable', function(done)
+    {
+        var promises = [
+            compile(_foreachIncrement("[i,item] in data.arr","i")),
+        ];
+        var check = result => { expect(result.replace(WHITESPACE,EMPTY)).to.equal("012"); };
+        testkit.map(promises,check,done);
     });
-    it('should return the key of a hash object', function(){
-        expect(compile(_foreachIncrement("[key,val] in data.hash","key")).replace(/\s/g,"")).to.equal("key1key2key3");
+
+    it('should return the key of a hash object', function(done)
+    {
+        var promises = [
+            compile(_foreachIncrement("[key,val] in data.hash","key")),
+        ];
+        var check = result => { expect(result.replace(WHITESPACE,EMPTY)).to.equal("key1key2key3"); };
+        testkit.map(promises,check,done);
     });
 });
 

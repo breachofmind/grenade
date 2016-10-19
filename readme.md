@@ -159,11 +159,11 @@ By default, variables have the javascript-esque syntax: `${variable}`. You can, 
 
 ### Functions
 
-Grenade allows you to call functions from your data object, like [EJS](https://github.com/tj/ejs):
+Grenade allows you to call functions from your data object, like [EJS](http://ejs.co/):
 
 `${ data.myFunction(arg1,arg2,"string") }`
 
-### Control structures / Loops
+### Control structures, loops, and tags
 
 Grenade comes with all the basic control structures, and some cool ones.
 
@@ -262,7 +262,7 @@ Display the contents of the block exactly how it's shown.
 
 #### @push and @stack
 
-Collects the `@push` scopes and renders them all under the `@stack` tag. Useful for adding scripts or CSS links to the document head or footer.
+Collects the `@push` blocks and renders them all under the `@stack` tag. Useful for adding scripts or CSS links to the document head or footer.
 
 ```html
 @stack(links)
@@ -338,8 +338,40 @@ A block is essentially the same as a component, only you can create a
     <p>I can then print it using ${=data.$block} !!</p>
 @endblock
 ```
+The component declaration looks kind of like this:
+```javascript
+// /componentPath/MyComponent.js
+"use strict"
+var grenade = require('grenade');
 
-Building components is worth it's own page, so check out the [docs.]()
+class MyComponent extends grenade.Component 
+{
+    constructor(tag) {
+    
+        // The tag argument is the matching tag, including any passed args.
+        // If using @block, a tag will have a tag.scope template.
+        super(tag);
+        
+        this.data = {
+            title:"Default Title"
+        }
+        // Use another grenade template file...
+        this.view = "components/example";
+        
+        // Or, use a string template.
+        this.template = "<div> ${=data.$block} </div>";
+    }
+    
+    render(data) {
+        // Maybe call to the server? Returning a promise is ok!
+        // return Users.find().then(...);
+        
+        return super.render(data);
+    }
+}
+
+module.exports = MyComponent;
+```
 
 ## Filters
 
