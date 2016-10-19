@@ -130,6 +130,24 @@ Tags are denoted with a `@` and have custom functionality. Variables are wrapped
 </html>
 ```
 
+Grenade compiles into pure javascript, which increases performance. For example:
+```html
+This gets compiled to javascript, ${ data.buddy }!
+@if(true)
+I promise.
+@endif
+```
+Compiles into:
+```javascript
+__out.push("This gets compiled to javascript, ");
+__out.push($$.val(data.buddy,data,['escape']));
+__out.push("!");
+if(true) {
+    __out.push("I promise.");
+}
+return $$.q.all(__out).then(function(__out) { return __out.join("").trim(""); });
+```
+
 ### Variables
 
 By default, variables have the javascript-esque syntax: `${variable}`. You can, however, use other delimiters if you so desire.
@@ -137,6 +155,7 @@ By default, variables have the javascript-esque syntax: `${variable}`. You can, 
 - `${ data.variable }` Escaped value.
 - `${= data.variable }` Raw value, good for HTML output.
 - `${# data.variable }` Comment. Not processed when rendered.
+- `${: data.variable }` Returns the literal string, `${ data.variable }`. Useful if using the handlebars syntax with Angular applications.
 
 ### Functions
 

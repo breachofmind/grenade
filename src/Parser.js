@@ -31,15 +31,19 @@ class Parser
         }
         var endIndex = find(this.delimiter, input, (match,start)=>
         {
+            // Add everything before this starting index.
             output.push(input.slice(start,match.index));
 
-            // This is a comment.
-            if (match[1][0] == TemplateVar.MODE_COMMENT) {
+            // Check for comments or literals.
+            if (match[1].startsWith(TemplateVar.MODE_COMMENT)) {
                 return;
+            } else if(match[1].startsWith(TemplateVar.MODE_LITERAL)) {
+                return output.push(match[0].replace(TemplateVar.MODE_LITERAL,""));
             }
             output.push(new TemplateVar(match[1], this.template));
         });
 
+        // Add everything after the last ending index.
         var end = input.slice(endIndex);
 
         if (end!=="") output.push(end);

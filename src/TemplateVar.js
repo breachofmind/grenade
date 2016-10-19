@@ -86,5 +86,6 @@ class TemplateVar
 
 TemplateVar.MODE_RAW     = "=";
 TemplateVar.MODE_COMMENT = "#";
+TemplateVar.MODE_LITERAL = ":";
 
 module.exports = TemplateVar;
