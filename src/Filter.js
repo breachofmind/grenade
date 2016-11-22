@@ -67,17 +67,15 @@ class FilterFactory
     /**
      * Create a new filter.
      * @param name string
-     * @param opts object
-     * @param action Function
+     * @param opts object|function
      * @returns Filter
      */
-    extend(name,opts,action)
+    extend(name,opts)
     {
-        if (arguments.length == 2) {
-            action = opts;
-            opts = {};
+        if (typeof opts === 'function') {
+            opts = {action: opts};
         }
-        var filter = new Filter(name,opts,action);
+        var filter = new Filter(name,opts);
         if (filter.prefix) {
             this.prefixes[filter.prefix] = filter;
         }
@@ -86,17 +84,30 @@ class FilterFactory
     }
 }
 
+FilterFactory.prototype.Transform = {
+    STRING: function(text) {
+        return `"${text}"`;
+    },
+    OBJECT: function(text) {
+        return `{${text}}`;
+    }
+};
+
 /**
  * Filter class.
  */
 class Filter
 {
-    constructor(name,opts,action)
+    constructor(name,opts)
     {
         if (! opts) opts = {};
 
+        if (typeof opts.action !== 'function') {
+            throw new Error(`Filter "${name}" has no action`);
+        }
+
         this.name = name;
-        this.action = action;
+        this.action = opts.action;
 
         // Transform the text given to something
         // the compiled javascript can use.
@@ -108,7 +119,8 @@ class Filter
         this.prefix = opts.prefix || false;
 
         // When using a prefix, is it the first filter applied or last?
-        this.pushPrefix = opts.pushPrefix || false;
+        // 1 = last, -1 first
+        this.order = opts.order || 1;
     }
 }
 

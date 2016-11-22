@@ -2,6 +2,7 @@
 
 var Expressway = require('expressway');
 var grenade = require('grenade');
+var Filter = grenade.Filter;
 
 class GrenadeEngineProvider extends Expressway.Provider
 {
@@ -9,43 +10,58 @@ class GrenadeEngineProvider extends Expressway.Provider
     {
         super(app);
 
-        this.requires = ['ExpressProvider'];
+        this.requires = [
+            'AppModule',
+        ];
 
         this.options = {
             debug:          false,
             prettyPrint:    false,
             extension:      "htm",
             enableCache:    app.env !== ENV_LOCAL,
-            rootPath:       app.path('views_path', '../resources/views'),
-            componentPath:  app.path('components_path', 'components')
         }
     }
 
     /**
      * Register with the application.
-     * @param app Application
-     * @param express Express
-     * @param event EventEmitter
+     * @param AppModule Module
+     * @param path PathService
      */
-    register(app,express,event)
+    register(AppModule,path)
     {
-        var opts = this.options;
+        this.options.componentPath = path.root('components/').get();
+        this.options.rootPath = path.views().get();
 
-        grenade.express(express, opts);
+        grenade.express(AppModule.express, this.options);
+        AppModule.set('view engine', this.options.extension);
+    }
 
-        grenade.Filter.extend(
-            'lang',
-            {
+    /**
+     * Set the view engine.
+     * @param router Router
+     * @param app Application
+     */
+    boot(app)
+    {
+        if (app.has('localeService')) {
+            Filter.extend('lang', {
                 prefix:">",
-                pushPrefix:false
-            },
-            function(value,data) {
-                return data.lang(value);
+                order:-1,
+                action: function(value,data) {
+                    return data.lang(value);
+                }
             });
+        }
 
-        // Make sure the right extension is being used.
-        event.on('application.bootstrap', function(app) {
-            express.set('view engine', opts.extension);
+        Filter.extend('route', {
+            prefix:"~",
+            order: -1,
+            transform: function(text) {
+                return JSON.stringify(text.split("/"));
+            },
+            action: function(value,data) {
+                return app.alias(value.shift()) + (value.length ? "/"+value.join("/"): "");
+            }
         })
     }
 }

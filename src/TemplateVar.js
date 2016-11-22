@@ -15,7 +15,6 @@ class TemplateVar
         this.text = text;
         this.template = template;
         this.filters = this.getFilters();
-
         this.source = this.getSource();
     }
 
@@ -42,11 +41,7 @@ class TemplateVar
         // There can be custom prefixes.
         var filter = Filter.prefixes[prefix];
         if (filter) {
-            if (filter.pushPrefix) {
-                filters.push(filter.name);
-            } else {
-                filters.unshift(filter.name);
-            }
+            filters[filter.order >= 1 ? "push" : "unshift"] (filter.name);
             this.text = this.text.slice(1).trim();
             if (filter.transform) {
                 this.text = filter.transform(this.text);
