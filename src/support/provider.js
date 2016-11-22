@@ -10,6 +10,8 @@ class GrenadeEngineProvider extends Expressway.Provider
     {
         super(app);
 
+        this.order = 20;
+
         this.requires = [
             'AppModule',
         ];
@@ -27,13 +29,16 @@ class GrenadeEngineProvider extends Expressway.Provider
      * @param AppModule Module
      * @param path PathService
      */
-    register(AppModule,path)
+    register(AppModule,app,path)
     {
         this.options.componentPath = path.root('components/').get();
         this.options.rootPath = path.views().get();
 
         grenade.express(AppModule.express, this.options);
         AppModule.set('view engine', this.options.extension);
+
+        // Also, create a compiler with the options.
+        app.register('grenade', new grenade.Compiler(this.options), "Grenade Templater compiler");
     }
 
     /**
