@@ -10,11 +10,9 @@ class GrenadeEngineProvider extends Expressway.Provider
     {
         super(app);
 
-        this.order = 20;
+        this.order(20);
 
-        this.requires = [
-            'AppModule',
-        ];
+        this.requires('AppModule');
 
         this.options = {
             debug:          false,
