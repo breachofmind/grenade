@@ -60,13 +60,13 @@ exports.load = function(filename,opts,done)
  * @param opts object
  * @returns {Function}
  */
-exports.express = function(app, opts)
+exports.express = function(app, opts={})
 {
     opts.express = true;
 
-    var compiler = new Compiler(opts);
+    let compiler = new Compiler(opts);
 
-    var engine = function(filename, options, done)
+    function engine(filename, options, done)
     {
         compiler.load(filename, function(err,template) {
             if (err) {
@@ -80,13 +80,4 @@ exports.express = function(app, opts)
     };
 
     return app.engine(opts.extension, engine)
-};
-
-/**
- * Expressway provider.
- * @returns {*}
- */
-exports.provider = function()
-{
-    return require('./src/support/provider');
 };
