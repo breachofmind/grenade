@@ -7,7 +7,7 @@ var _ = require('lodash');
  * A helper function for adding grenade to an Expressway app.
  * @author Mike Adamczyk <mike@bom.us>
  */
-module.exports = function(app,extension,opts={},paths)
+module.exports = function(app,extension,opts,paths)
 {
     var defaultOptions = {
         debug:          false,
